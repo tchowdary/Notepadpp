@@ -2,13 +2,13 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzI5NjJmZiIgZD0iTTE5LDNINWMtMS4xLDAtMiwwLjktMiwydjE0YzAsMS4xLDAuOSwyLDIsMmgxNGMxLjEsMCwyLTAuOSwyLTJWNUMyMSwzLjksMjAuMSwzLDE5LDN6IE0xNywxM2gtNHY0aC0ydi00SDd2LTJoNFY3aDJ2NGg0VjEzeiIvPjwvc3ZnPg==" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Notepad</title>
     <!-- Add JetBrains Mono font -->
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
     <style>
         :root {
             /* Dark theme (default) */
@@ -41,7 +41,7 @@
         }
 
         body {
-            font-family: 'JetBrains Mono', monospace;
+            font-family: "JetBrains Mono", monospace;
             background-color: var(--bg-color);
             color: var(--text-color);
             height: 100vh;
@@ -170,7 +170,7 @@
             padding: 8px;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'JetBrains Mono', monospace;
+            font-family: "JetBrains Mono", monospace;
             font-size: 16px;
             line-height: 1.5;
             resize: none;
@@ -213,7 +213,6 @@
             background: var(--line-number-color);
         }
 
-
         /* Add error message styling */
         .error-message {
             position: fixed;
@@ -238,6 +237,13 @@
                 transform: translateY(0);
             }
         }
+
+        /* Add new style for word wrap */
+        .editor.word-wrap {
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            overflow-x: hidden;
+        }
     </style>
 </head>
 
@@ -245,47 +251,60 @@
     <div class="toolbar">
         <button onclick="newFile()" title="New File">
             <svg viewBox="0 0 24 24">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
             </svg>
         </button>
         <button onclick="saveCurrentFile()" title="Save">
             <svg viewBox="0 0 24 24">
-                <path d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4zm2 16H5V5h11.17L19 7.83V19zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                <path
+                    d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4zm2 16H5V5h11.17L19 7.83V19zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
             </svg>
         </button>
         <button onclick="downloadCurrentFile()" title="Download">
             <svg viewBox="0 0 24 24">
-                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
             </svg>
         </button>
         <button onclick="document.getElementById('fileInput').click()" title="Open File">
             <svg viewBox="0 0 24 24">
-                <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+                <path
+                    d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
             </svg>
         </button>
         <button onclick="toggleTheme()" title="Toggle Theme">
             <svg viewBox="0 0 24 24">
-                <path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>
+                <path
+                    d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z" />
             </svg>
         </button>
         <button onclick="formatJSON()" title="Format JSON">
             <svg viewBox="0 0 24 24">
-                <path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 18H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zM9 10H7V8h2v2zm4 0h-2V8h2v2zm4 0h-2V8h2v2z"/>
+                <path
+                    d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 18H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zM9 10H7V8h2v2zm4 0h-2V8h2v2zm4 0h-2V8h2v2z" />
             </svg>
         </button>
         <button onclick="setAPIKey()" id="apiKeyButton" title="Set API Key">
             <svg viewBox="0 0 24 24">
-                <path d="M22 19h-6v-4h-2.68c-1.14 2.42-3.6 4-6.32 4-3.86 0-7-3.14-7-7s3.14-7 7-7c2.72 0 5.17 1.58 6.32 4H24v6h-2v4zm-4-2h2v-4h2v-2H11.94l-.23-.67C11.01 8.34 9.11 7 7 7c-2.76 0-5 2.24-5 5s2.24 5 5 5c2.11 0 4.01-1.34 4.71-3.33l.23-.67H18v4zM7 15c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm0-4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/>
+                <path
+                    d="M22 19h-6v-4h-2.68c-1.14 2.42-3.6 4-6.32 4-3.86 0-7-3.14-7-7s3.14-7 7-7c2.72 0 5.17 1.58 6.32 4H24v6h-2v4zm-4-2h2v-4h2v-2H11.94l-.23-.67C11.01 8.34 9.11 7 7 7c-2.76 0-5 2.24-5 5s2.24 5 5 5c2.11 0 4.01-1.34 4.71-3.33l.23-.67H18v4zM7 15c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm0-4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z" />
             </svg>
         </button>
         <button onclick="improveSelectedText()" title="Improve Text" class="improve-text">
             <svg viewBox="0 0 24 24">
-                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                <path
+                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
             </svg>
         </button>
         <button onclick="convertTimestamp()" title="Convert Time">
             <svg viewBox="0 0 24 24">
-                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                <path
+                    d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+            </svg>
+        </button>
+        <button onclick="toggleWordWrap()" title="Toggle Word Wrap">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3 3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z" />
             </svg>
         </button>
     </div>
@@ -300,88 +319,106 @@
     <script>
         let tabs = [];
         let activeTabId = null;
-        let currentTheme = 'dark';
+        let currentTheme = "dark";
 
         // Tab class to manage individual tabs
         class Tab {
-            constructor(id, name = 'Untitled', content = '') {
+            constructor(id, name = "Untitled", content = "") {
                 this.id = id;
                 this.name = name;
                 this.content = content;
+                this.wordWrap = localStorage.getItem("wordWrap") === "true";
                 this.createElements();
+
                 // Add keyboard shortcut handling to the editor
-                this.editor.addEventListener('keydown', (e) => {
-                    // Handle tab key (already implemented)
-                    if (e.key === 'Tab') {
+                this.editor.addEventListener("keydown", (e) => {
+                    if (e.key === "Tab") {
                         this.handleTabKey(e);
                     }
                 });
+
+                // Apply word wrap setting
+                if (this.wordWrap) {
+                    this.editor.classList.add("word-wrap");
+                }
             }
 
             createElements() {
                 // Create editor wrapper
-                this.editorWrapper = document.createElement('div');
-                this.editorWrapper.className = 'editor-wrapper';
+                this.editorWrapper = document.createElement("div");
+                this.editorWrapper.className = "editor-wrapper";
                 this.editorWrapper.id = `editor-wrapper-${this.id}`;
 
                 // Create line numbers
-                this.lineNumbers = document.createElement('div');
-                this.lineNumbers.className = 'line-numbers';
+                this.lineNumbers = document.createElement("div");
+                this.lineNumbers.className = "line-numbers";
 
                 // Create editor
-                this.editor = document.createElement('textarea');
-                this.editor.className = 'editor';
+                this.editor = document.createElement("textarea");
+                this.editor.className = "editor";
                 this.editor.value = this.content;
                 this.editor.spellcheck = false;
 
                 // Add event listeners
-                this.editor.addEventListener('input', () => {
+                this.editor.addEventListener("input", () => {
                     this.updateLineNumbers();
                     this.saveToLocalStorage();
                 });
-                this.editor.addEventListener('scroll', () => {
+                this.editor.addEventListener("scroll", () => {
                     this.lineNumbers.scrollTop = this.editor.scrollTop;
                 });
-                this.editor.addEventListener('keyup', () => this.updateStatusBar());
-                this.editor.addEventListener('click', () => this.updateStatusBar());
-                this.editor.addEventListener('scroll', () => this.updateStatusBar());
-                this.editor.addEventListener('keydown', this.handleTabKey.bind(this));
+                this.editor.addEventListener("keyup", () => this.updateStatusBar());
+                this.editor.addEventListener("click", () => this.updateStatusBar());
+                this.editor.addEventListener("scroll", () => this.updateStatusBar());
+                this.editor.addEventListener("keydown", this.handleTabKey.bind(this));
 
                 // Assemble elements
                 this.editorWrapper.appendChild(this.lineNumbers);
                 this.editorWrapper.appendChild(this.editor);
-                document.getElementById('editorContainer').appendChild(this.editorWrapper);
+                document
+                    .getElementById("editorContainer")
+                    .appendChild(this.editorWrapper);
 
                 this.updateLineNumbers();
             }
 
             updateLineNumbers() {
-                const lines = this.editor.value.split('\n');
+                const lines = this.editor.value.split("\n");
                 const lineCount = lines.length;
-                const lineNumbersContent = Array.from({ length: lineCount }, (_, i) => {
-                    const div = document.createElement('div');
-                    div.textContent = i + 1;
-                    return div;
-                });
-                this.lineNumbers.innerHTML = '';
-                lineNumbersContent.forEach(div => this.lineNumbers.appendChild(div));
+                const lineNumbersContent = Array.from(
+                    { length: lineCount },
+                    (_, i) => {
+                        const div = document.createElement("div");
+                        div.textContent = i + 1;
+                        return div;
+                    }
+                );
+                this.lineNumbers.innerHTML = "";
+                lineNumbersContent.forEach((div) =>
+                    this.lineNumbers.appendChild(div)
+                );
             }
 
             updateStatusBar() {
                 const text = this.editor.value;
                 const position = this.editor.selectionStart;
-                const lines = text.substr(0, position).split('\n');
+                const lines = text.substr(0, position).split("\n");
                 const currentLine = lines.length;
                 const currentColumn = lines[lines.length - 1].length + 1;
-                document.getElementById('statusInfo').textContent = `Ln ${currentLine}, Col ${currentColumn}`;
+                document.getElementById(
+                    "statusInfo"
+                ).textContent = `Ln ${currentLine}, Col ${currentColumn}`;
             }
 
             handleTabKey(e) {
-                if (e.key === 'Tab') {
+                if (e.key === "Tab") {
                     e.preventDefault();
                     const start = this.editor.selectionStart;
                     const end = this.editor.selectionEnd;
-                    this.editor.value = this.editor.value.substring(0, start) + '    ' + this.editor.value.substring(end);
+                    this.editor.value =
+                        this.editor.value.substring(0, start) +
+                        "    " +
+                        this.editor.value.substring(end);
                     this.editor.selectionStart = this.editor.selectionEnd = start + 4;
                     this.updateLineNumbers();
                     this.saveToLocalStorage();
@@ -389,37 +426,39 @@
             }
 
             activate() {
-                this.editorWrapper.classList.add('active');
-                document.getElementById('statusFileName').textContent = this.name;
+                this.editorWrapper.classList.add("active");
+                document.getElementById("statusFileName").textContent = this.name;
                 this.updateStatusBar();
             }
 
             deactivate() {
-                this.editorWrapper.classList.remove('active');
+                this.editorWrapper.classList.remove("active");
             }
 
             saveToLocalStorage() {
-                localStorage.setItem(`tab_${this.id}`, JSON.stringify({
-                    name: this.name,
-                    content: this.editor.value
-                }));
+                localStorage.setItem(
+                    `tab_${this.id}`,
+                    JSON.stringify({
+                        name: this.name,
+                        content: this.editor.value,
+                    })
+                );
             }
-
         }
 
         // Initialize editor
         function initEditor() {
             // Load saved tabs from localStorage
             const savedTabs = Object.keys(localStorage)
-                .filter(key => key.startsWith('tab_'))
-                .map(key => {
-                    const id = key.replace('tab_', '');
+                .filter((key) => key.startsWith("tab_"))
+                .map((key) => {
+                    const id = key.replace("tab_", "");
                     const data = JSON.parse(localStorage.getItem(key));
                     return { id, ...data };
                 });
 
             if (savedTabs.length > 0) {
-                savedTabs.forEach(tabData => {
+                savedTabs.forEach((tabData) => {
                     createTab(tabData.name, tabData.content, tabData.id);
                 });
                 setActiveTab(savedTabs[0].id);
@@ -428,24 +467,34 @@
             }
 
             // Load theme
-            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const savedTheme = localStorage.getItem("theme") || "dark";
             setTheme(savedTheme);
         }
 
-        function createTab(name = 'Untitled', content = '', id = Date.now().toString()) {
+        // Modified createTab function to handle word wrap
+        function createTab(
+            name = "Untitled",
+            content = "",
+            id = Date.now().toString()
+        ) {
             // Create tab button
-            const tabButton = document.createElement('button');
-            tabButton.className = 'tab';
+            const tabButton = document.createElement("button");
+            tabButton.className = "tab";
             tabButton.innerHTML = `
                 <span>${name}</span>
                 <button class="tab-close" onclick="closeTab('${id}', event)">×</button>
             `;
             tabButton.onclick = () => setActiveTab(id);
-            document.getElementById('tabsContainer').appendChild(tabButton);
+            document.getElementById("tabsContainer").appendChild(tabButton);
 
             // Create new tab instance
             const tab = new Tab(id, name, content);
             tabs.push({ id, tab, button: tabButton });
+
+            // Apply word wrap setting if enabled
+            if (localStorage.getItem("wordWrap") === "true") {
+                tab.editor.classList.add("word-wrap");
+            }
 
             return id;
         }
@@ -453,18 +502,18 @@
         function setActiveTab(id) {
             // Deactivate current tab
             if (activeTabId) {
-                const currentTab = tabs.find(t => t.id === activeTabId);
+                const currentTab = tabs.find((t) => t.id === activeTabId);
                 if (currentTab) {
                     currentTab.tab.deactivate();
-                    currentTab.button.classList.remove('active');
+                    currentTab.button.classList.remove("active");
                 }
             }
 
             // Activate new tab
-            const newTab = tabs.find(t => t.id === id);
+            const newTab = tabs.find((t) => t.id === id);
             if (newTab) {
                 newTab.tab.activate();
-                newTab.button.classList.add('active');
+                newTab.button.classList.add("active");
                 activeTabId = id;
             }
         }
@@ -472,11 +521,11 @@
         function closeTab(id, event) {
             event.stopPropagation();
             if (tabs.length === 1) {
-                alert('Cannot close the last tab');
+                alert("Cannot close the last tab");
                 return;
             }
 
-            const tabIndex = tabs.findIndex(t => t.id === id);
+            const tabIndex = tabs.findIndex((t) => t.id === id);
             if (tabIndex === -1) return;
 
             // Remove tab elements
@@ -496,7 +545,7 @@
         }
 
         function getCurrentTab() {
-            return tabs.find(t => t.id === activeTabId)?.tab;
+            return tabs.find((t) => t.id === activeTabId)?.tab;
         }
 
         // File operations
@@ -509,16 +558,16 @@
             const tab = getCurrentTab();
             if (tab) {
                 tab.saveToLocalStorage();
-                alert('File saved to browser storage');
+                alert("File saved to browser storage");
             }
         }
 
         function downloadCurrentFile() {
             const tab = getCurrentTab();
             if (tab) {
-                const blob = new Blob([tab.editor.value], { type: 'text/plain' });
+                const blob = new Blob([tab.editor.value], { type: "text/plain" });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
+                const a = document.createElement("a");
                 a.href = url;
                 a.download = tab.name;
                 a.click();
@@ -536,19 +585,19 @@
                 };
                 reader.readAsText(file);
             }
-            event.target.value = ''; // Reset file input
+            event.target.value = ""; // Reset file input
         }
 
         // Theme switching
         function toggleTheme() {
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const newTheme = currentTheme === "dark" ? "light" : "dark";
             setTheme(newTheme);
         }
 
         function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.setAttribute("data-theme", theme);
             currentTheme = theme;
-            localStorage.setItem('theme', theme);
+            localStorage.setItem("theme", theme);
         }
 
         // Add new function for JSON formatting
@@ -582,37 +631,37 @@
 
         // Add error message handling
         function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
+            const errorElement = document.getElementById("errorMessage");
             errorElement.textContent = message;
-            errorElement.style.display = 'block';
+            errorElement.style.display = "block";
 
             // Hide after 3 seconds
             setTimeout(() => {
-                errorElement.style.display = 'none';
+                errorElement.style.display = "none";
             }, 3000);
         }
 
         // API Key management
         function setAPIKey() {
-            const currentKey = localStorage.getItem('anthropic_api_key') || '';
-            const apiKey = prompt('Enter your Anthropic API key:', currentKey);
+            const currentKey = localStorage.getItem("anthropic_api_key") || "";
+            const apiKey = prompt("Enter your Anthropic API key:", currentKey);
             if (apiKey !== null) {
-                localStorage.setItem('anthropic_api_key', apiKey);
-                showError('API key saved');
+                localStorage.setItem("anthropic_api_key", apiKey);
+                showError("API key saved");
                 updateAPIKeyButtonVisibility();
             }
         }
 
         function updateAPIKeyButtonVisibility() {
-            const apiKeyButton = document.getElementById('apiKeyButton');
-            const hasApiKey = !!localStorage.getItem('anthropic_api_key');
-            apiKeyButton.style.display = hasApiKey ? 'none' : 'inline-block';
+            const apiKeyButton = document.getElementById("apiKeyButton");
+            const hasApiKey = !!localStorage.getItem("anthropic_api_key");
+            apiKeyButton.style.display = hasApiKey ? "none" : "inline-block";
         }
 
         // Add context menu for Improve Text button to change API key
-        document.addEventListener('DOMContentLoaded', () => {
-            const improveButton = document.querySelector('.improve-text');
-            improveButton.addEventListener('contextmenu', (e) => {
+        document.addEventListener("DOMContentLoaded", () => {
+            const improveButton = document.querySelector(".improve-text");
+            improveButton.addEventListener("contextmenu", (e) => {
                 e.preventDefault();
                 setAPIKey();
             });
@@ -623,9 +672,9 @@
             const tab = getCurrentTab();
             if (!tab) return;
 
-            const apiKey = localStorage.getItem('anthropic_api_key');
+            const apiKey = localStorage.getItem("anthropic_api_key");
             if (!apiKey) {
-                showError('Please set your API key first');
+                showError("Please set your API key first");
                 return;
             }
 
@@ -635,7 +684,7 @@
             const selectedText = tab.editor.value.substring(start, end);
 
             if (!selectedText) {
-                showError('Please select some text to improve');
+                showError("Please select some text to improve");
                 return;
             }
 
@@ -659,7 +708,9 @@
                                     content: [
                                         {
                                             type: "text",
-                                            text: "Your task is to take the text provided and rewrite it into a clear, grammatically correct version while preserving the original meaning as closely as possible. Correct any spelling mistakes, punctuation errors, verb tense issues, word choice problems, and other grammatical mistakes. Give only improvement text.: " + selectedText,
+                                            text:
+                                                "Your task is to take the text provided and rewrite it into a clear, grammatically correct version while preserving the original meaning as closely as possible. Correct any spelling mistakes, punctuation errors, verb tense issues, word choice problems, and other grammatical mistakes. Give only improvement text.: " +
+                                                selectedText,
                                         },
                                     ],
                                 },
@@ -675,23 +726,23 @@
 
                 const data = await response.json();
                 const improvedText = data.content[0].text
-                    .replace(/^"/, '') // Remove leading quote if present
-                    .replace(/"$/, '') // Remove trailing quote if present
-                    .replace(/^Here'?s the improved text:?\s*/i, '') // Remove "Here's the improved text:" prefix
+                    .replace(/^"/, "") // Remove leading quote if present
+                    .replace(/"$/, "") // Remove trailing quote if present
+                    .replace(/^Here'?s the improved text:?\s*/i, "") // Remove "Here's the improved text:" prefix
                     .trim(); // Remove any extra whitespace
 
                 // Insert improved text below the selection with a separator
                 const before = tab.editor.value.substring(0, end);
                 const after = tab.editor.value.substring(end);
-                tab.editor.value = before + '\n\n---\n' + improvedText + '\n---\n\n' + after;
+                tab.editor.value =
+                    before + "\n\n---\n" + improvedText + "\n---\n\n" + after;
 
                 // Update editor state
                 tab.updateLineNumbers();
                 tab.saveToLocalStorage();
-                showError('Text improved successfully');
-
+                showError("Text improved successfully");
             } catch (error) {
-                showError('API Error: ' + error.message);
+                showError("API Error: " + error.message);
             }
         }
 
@@ -705,7 +756,7 @@
             const selectedText = tab.editor.value.substring(start, end).trim();
 
             if (!selectedText) {
-                showError('Please select a timestamp to convert');
+                showError("Please select a timestamp to convert");
                 return;
             }
 
@@ -714,7 +765,8 @@
                 if (isNaN(timestamp)) throw new Error("Invalid timestamp");
 
                 // Detect format (milliseconds or seconds) based on length
-                const format = timestamp.toString().length === 13 ? "milliseconds" : "seconds";
+                const format =
+                    timestamp.toString().length === 13 ? "milliseconds" : "seconds";
                 const ms = format === "seconds" ? timestamp * 1000 : timestamp;
                 const date = new Date(ms);
 
@@ -732,48 +784,65 @@
                 // Update editor state
                 tab.updateLineNumbers();
                 tab.saveToLocalStorage();
-
             } catch (error) {
-                showError('Invalid timestamp format');
-                const convertButton = document.querySelector('.convert-timestamp');
-                convertButton.classList.add('error');
+                showError("Invalid timestamp format");
+                const convertButton = document.querySelector(".convert-timestamp");
+                convertButton.classList.add("error");
                 setTimeout(() => {
-                    convertButton.classList.remove('error');
+                    convertButton.classList.remove("error");
                 }, 2000);
             }
         }
 
         // Add keyboard shortcuts handler
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener("keydown", (e) => {
             // Ctrl+W to close current tab
-            if (e.ctrlKey && e.key === 'w') {
+            if (e.ctrlKey && e.key === "w") {
                 e.preventDefault();
                 if (activeTabId) {
-                    closeTab(activeTabId, new Event('dummy'));
+                    closeTab(activeTabId, new Event("dummy"));
                 }
             }
 
             // Escape to clear editor content
-            if (e.key === 'Escape') {
+            if (e.key === "Escape") {
                 const tab = getCurrentTab();
                 if (tab) {
-
-                    tab.editor.value = '';
+                    tab.editor.value = "";
                     tab.updateLineNumbers();
                     tab.saveToLocalStorage();
-
                 }
             }
         });
 
         // Add double-click handler for new tab creation
-        document.querySelector('.tabs-container').addEventListener('dblclick', (e) => {
-            // Only create new tab if clicking on the tabs container itself, not on existing tabs
-            if (e.target === document.querySelector('.tabs-container')) {
-                newFile();
-            }
-        });
+        document
+            .querySelector(".tabs-container")
+            .addEventListener("dblclick", (e) => {
+                // Only create new tab if clicking on the tabs container itself, not on existing tabs
+                if (e.target === document.querySelector(".tabs-container")) {
+                    newFile();
+                }
+            });
 
+        // Add word wrap toggle function
+        function toggleWordWrap() {
+            const wordWrap = localStorage.getItem("wordWrap") === "true";
+            const newWordWrap = !wordWrap;
+            localStorage.setItem("wordWrap", newWordWrap);
+
+            // Apply to all tabs
+            tabs.forEach((tab) => {
+                if (newWordWrap) {
+                    tab.tab.editor.classList.add("word-wrap");
+                } else {
+                    tab.tab.editor.classList.remove("word-wrap");
+                }
+            });
+
+            // Show feedback
+            showError(newWordWrap ? "Word wrap enabled" : "Word wrap disabled");
+        }
 
         // Initialize the editor
         initEditor();
