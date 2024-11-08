@@ -238,7 +238,7 @@
         <button onclick="setAPIKey()" id="apiKeyButton" class="api-key">Set API Key</button>
         <button onclick="improveSelectedText()" class="improve-text" title="Right-click to change API key">Improve
             Text</button>
-            <button onclick="convertTimestamp()" class="convert-timestamp">Convert Time</button>
+        <button onclick="convertTimestamp()" class="convert-timestamp">Convert Time</button>
     </div>
     </div>
     <div class="tabs-container" id="tabsContainer"></div>
@@ -261,6 +261,13 @@
                 this.name = name;
                 this.content = content;
                 this.createElements();
+                // Add keyboard shortcut handling to the editor
+                this.editor.addEventListener('keydown', (e) => {
+                    // Handle tab key (already implemented)
+                    if (e.key === 'Tab') {
+                        this.handleTabKey(e);
+                    }
+                });
             }
 
             createElements() {
@@ -349,6 +356,7 @@
                     content: this.editor.value
                 }));
             }
+
         }
 
         // Initialize editor
@@ -686,6 +694,37 @@
                 }, 2000);
             }
         }
+
+        // Add keyboard shortcuts handler
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+W to close current tab
+            if (e.ctrlKey && e.key === 'w') {
+                e.preventDefault();
+                if (activeTabId) {
+                    closeTab(activeTabId, new Event('dummy'));
+                }
+            }
+
+            // Escape to clear editor content
+            if (e.key === 'Escape') {
+                const tab = getCurrentTab();
+                if (tab) {
+
+                    tab.editor.value = '';
+                    tab.updateLineNumbers();
+                    tab.saveToLocalStorage();
+
+                }
+            }
+        });
+
+        // Add double-click handler for new tab creation
+        document.querySelector('.tabs-container').addEventListener('dblclick', (e) => {
+            // Only create new tab if clicking on the tabs container itself, not on existing tabs
+            if (e.target === document.querySelector('.tabs-container')) {
+                newFile();
+            }
+        });
 
 
         // Initialize the editor
