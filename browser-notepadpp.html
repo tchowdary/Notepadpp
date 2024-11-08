@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Notepad++</title>
+    <!-- Add JetBrains Mono font -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Dark theme (default) */
+            --bg-color: #1e1e1e;
+            --text-color: #d4d4d4;
+            --line-number-color: #858585;
+            --highlight-color: #264f78;
+            --toolbar-bg: #333333;
+            --tab-bg: #2d2d2d;
+            --tab-active-bg: #1e1e1e;
+            --border-color: #555;
+        }
+
+        /* Light theme */
+        [data-theme="light"] {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --line-number-color: #999999;
+            --highlight-color: #e3f2fd;
+            --toolbar-bg: #f5f5f5;
+            --tab-bg: #ebebeb;
+            --tab-active-bg: #ffffff;
+            --border-color: #ccc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            background-color: var(--toolbar-bg);
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .toolbar button {
+            padding: 4px 8px;
+            background-color: var(--tab-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .toolbar button:hover {
+            background-color: var(--tab-active-bg);
+        }
+
+        .tabs-container {
+            background-color: var(--toolbar-bg);
+            display: flex;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background-color: var(--tab-bg);
+            border: none;
+            border-right: 1px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+            max-width: 200px;
+        }
+
+        .tab.active {
+            background-color: var(--tab-active-bg);
+            border-bottom: 2px solid #007acc;
+        }
+
+        .tab-close {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: none;
+            background-color: transparent;
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        .tab-close:hover {
+            background-color: var(--border-color);
+        }
+
+        .editor-container {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .editor-wrapper {
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: none;
+        }
+
+        .editor-wrapper.active {
+            display: flex;
+        }
+
+        .line-numbers {
+            padding: 8px 8px 8px 0;
+            background-color: var(--bg-color);
+            color: var(--line-number-color);
+            text-align: right;
+            user-select: none;
+            border-right: 1px solid var(--border-color);
+            overflow-y: hidden;
+            min-width: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .editor {
+            flex-grow: 1;
+            padding: 8px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            border: none;
+            outline: none;
+            white-space: pre;
+            overflow-wrap: normal;
+            overflow-x: auto;
+        }
+
+        .editor:focus {
+            outline: none;
+        }
+
+        .status-bar {
+            background-color: var(--toolbar-bg);
+            padding: 4px 8px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--line-number-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <button onclick="newFile()">New</button>
+        <button onclick="saveCurrentFile()">Save</button>
+        <button onclick="downloadCurrentFile()">Download</button>
+        <input type="file" id="fileInput" style="display: none" onchange="openFile(event)">
+        <button onclick="document.getElementById('fileInput').click()">Open</button>
+        <button onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+    <div class="tabs-container" id="tabsContainer"></div>
+    <div class="editor-container" id="editorContainer"></div>
+    <div class="status-bar">
+        <span id="statusFileName">Untitled</span>
+        <span id="statusInfo">Ln 1, Col 1</span>
+    </div>
+
+    <script>
+        let tabs = [];
+        let activeTabId = null;
+        let currentTheme = 'dark';
+
+        // Tab class to manage individual tabs
+        class Tab {
+            constructor(id, name = 'Untitled', content = '') {
+                this.id = id;
+                this.name = name;
+                this.content = content;
+                this.createElements();
+            }
+
+            createElements() {
+                // Create editor wrapper
+                this.editorWrapper = document.createElement('div');
+                this.editorWrapper.className = 'editor-wrapper';
+                this.editorWrapper.id = `editor-wrapper-${this.id}`;
+
+                // Create line numbers
+                this.lineNumbers = document.createElement('div');
+                this.lineNumbers.className = 'line-numbers';
+                
+                // Create editor
+                this.editor = document.createElement('textarea');
+                this.editor.className = 'editor';
+                this.editor.value = this.content;
+                this.editor.spellcheck = false;
+
+                // Add event listeners
+                this.editor.addEventListener('input', () => {
+                    this.updateLineNumbers();
+                    this.saveToLocalStorage();
+                });
+                this.editor.addEventListener('scroll', () => {
+                    this.lineNumbers.scrollTop = this.editor.scrollTop;
+                });
+                this.editor.addEventListener('keyup', () => this.updateStatusBar());
+                this.editor.addEventListener('click', () => this.updateStatusBar());
+                this.editor.addEventListener('scroll', () => this.updateStatusBar());
+                this.editor.addEventListener('keydown', this.handleTabKey.bind(this));
+
+                // Assemble elements
+                this.editorWrapper.appendChild(this.lineNumbers);
+                this.editorWrapper.appendChild(this.editor);
+                document.getElementById('editorContainer').appendChild(this.editorWrapper);
+
+                this.updateLineNumbers();
+            }
+
+            updateLineNumbers() {
+                const lines = this.editor.value.split('\n');
+                const lineCount = lines.length;
+                const lineNumbersContent = Array.from({ length: lineCount }, (_, i) => {
+                const div = document.createElement('div');
+                div.textContent = i + 1;
+                return div;
+            });
+            this.lineNumbers.innerHTML = '';
+            lineNumbersContent.forEach(div => this.lineNumbers.appendChild(div));
+            }
+
+            updateStatusBar() {
+                const text = this.editor.value;
+                const position = this.editor.selectionStart;
+                const lines = text.substr(0, position).split('\n');
+                const currentLine = lines.length;
+                const currentColumn = lines[lines.length - 1].length + 1;
+                document.getElementById('statusInfo').textContent = `Ln ${currentLine}, Col ${currentColumn}`;
+            }
+
+            handleTabKey(e) {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const start = this.editor.selectionStart;
+                    const end = this.editor.selectionEnd;
+                    this.editor.value = this.editor.value.substring(0, start) + '    ' + this.editor.value.substring(end);
+                    this.editor.selectionStart = this.editor.selectionEnd = start + 4;
+                    this.updateLineNumbers();
+                    this.saveToLocalStorage();
+                }
+            }
+
+            activate() {
+                this.editorWrapper.classList.add('active');
+                document.getElementById('statusFileName').textContent = this.name;
+                this.updateStatusBar();
+            }
+
+            deactivate() {
+                this.editorWrapper.classList.remove('active');
+            }
+
+            saveToLocalStorage() {
+                localStorage.setItem(`tab_${this.id}`, JSON.stringify({
+                    name: this.name,
+                    content: this.editor.value
+                }));
+            }
+        }
+
+        // Initialize editor
+        function initEditor() {
+            // Load saved tabs from localStorage
+            const savedTabs = Object.keys(localStorage)
+                .filter(key => key.startsWith('tab_'))
+                .map(key => {
+                    const id = key.replace('tab_', '');
+                    const data = JSON.parse(localStorage.getItem(key));
+                    return { id, ...data };
+                });
+
+            if (savedTabs.length > 0) {
+                savedTabs.forEach(tabData => {
+                    createTab(tabData.name, tabData.content, tabData.id);
+                });
+                setActiveTab(savedTabs[0].id);
+            } else {
+                createTab();
+            }
+
+            // Load theme
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
+        }
+
+        function createTab(name = 'Untitled', content = '', id = Date.now().toString()) {
+            // Create tab button
+            const tabButton = document.createElement('button');
+            tabButton.className = 'tab';
+            tabButton.innerHTML = `
+                <span>${name}</span>
+                <button class="tab-close" onclick="closeTab('${id}', event)">×</button>
+            `;
+            tabButton.onclick = () => setActiveTab(id);
+            document.getElementById('tabsContainer').appendChild(tabButton);
+
+            // Create new tab instance
+            const tab = new Tab(id, name, content);
+            tabs.push({ id, tab, button: tabButton });
+            
+            return id;
+        }
+
+        function setActiveTab(id) {
+            // Deactivate current tab
+            if (activeTabId) {
+                const currentTab = tabs.find(t => t.id === activeTabId);
+                if (currentTab) {
+                    currentTab.tab.deactivate();
+                    currentTab.button.classList.remove('active');
+                }
+            }
+
+            // Activate new tab
+            const newTab = tabs.find(t => t.id === id);
+            if (newTab) {
+                newTab.tab.activate();
+                newTab.button.classList.add('active');
+                activeTabId = id;
+            }
+        }
+
+        function closeTab(id, event) {
+            event.stopPropagation();
+            if (tabs.length === 1) {
+                alert('Cannot close the last tab');
+                return;
+            }
+
+            const tabIndex = tabs.findIndex(t => t.id === id);
+            if (tabIndex === -1) return;
+
+            // Remove tab elements
+            const tab = tabs[tabIndex];
+            tab.button.remove();
+            tab.tab.editorWrapper.remove();
+            localStorage.removeItem(`tab_${id}`);
+
+            // Remove tab from array
+            tabs.splice(tabIndex, 1);
+
+            // If closing active tab, activate another tab
+            if (activeTabId === id) {
+                const newTabId = tabs[Math.min(tabIndex, tabs.length - 1)].id;
+                setActiveTab(newTabId);
+            }
+        }
+
+        function getCurrentTab() {
+            return tabs.find(t => t.id === activeTabId)?.tab;
+        }
+
+        // File operations
+        function newFile() {
+            const id = createTab();
+            setActiveTab(id);
+        }
+
+        function saveCurrentFile() {
+            const tab = getCurrentTab();
+            if (tab) {
+                tab.saveToLocalStorage();
+                alert('File saved to browser storage');
+            }
+        }
+
+        function downloadCurrentFile() {
+            const tab = getCurrentTab();
+            if (tab) {
+                const blob = new Blob([tab.editor.value], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = tab.name;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function openFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const id = createTab(file.name, e.target.result);
+                    setActiveTab(id);
+                };
+                reader.readAsText(file);
+            }
+            event.target.value = ''; // Reset file input
+        }
+
+        // Theme switching
+        function toggleTheme() {
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            currentTheme = theme;
+            localStorage.setItem('theme', theme);
+        }
+
+        // Initialize the editor
+        initEditor();
+    </script>
+</body>
+</html>
