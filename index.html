@@ -883,6 +883,13 @@
                     .replace(/^Here'?s the improved text:?\s*/i, "") // Remove "Here's the improved text:" prefix
                     .trim(); // Remove any extra whitespace
 
+                try {
+                    await navigator.clipboard.writeText(improvedText);
+                    showError("Improved text copied to clipboard!");
+                } catch (clipboardError) {
+                    showError("Failed to copy to clipboard: " + clipboardError.message);
+                }
+
                 // Insert improved text below the selection with a separator
                 const before = tab.editor.value.substring(0, end);
                 const after = tab.editor.value.substring(end);
