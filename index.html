@@ -348,8 +348,10 @@
     <div class="editor-container" id="editorContainer"></div>
     <div class="status-bar">
         <span id="statusFileName">Untitled</span>
+        <span id="selectionInfo"></span>
         <span id="statusInfo">Ln 1, Col 1</span>
     </div>
+
     <div id="errorMessage" class="error-message"></div>
 
     <!-- Add new selection popup HTML -->
@@ -358,7 +360,7 @@
             <svg viewBox="0 0 24 24">
                 <path
                     d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-            </svg>            
+            </svg>
         </button>
     </div>
 
@@ -539,9 +541,25 @@
                 const lines = text.substr(0, position).split("\n");
                 const currentLine = lines.length;
                 const currentColumn = lines[lines.length - 1].length + 1;
+
                 document.getElementById(
                     "statusInfo"
                 ).textContent = `Ln ${currentLine}, Col ${currentColumn}`;
+
+                // Get selected text length
+                const selectionStart = this.editor.selectionStart;
+                const selectionEnd = this.editor.selectionEnd;
+                const selectedText = this.editor.value.substring(selectionStart, selectionEnd);
+                const selectedLength = selectedText.length;
+                const selectedWords = selectedText ? selectedText.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
+
+                // Update selection info
+                const selectionInfo = document.getElementById("selectionInfo");
+                if (selectedLength > 0) {
+                    selectionInfo.textContent = `Sel ${selectedLength} chr, ${selectedWords} words`;
+                } else {
+                    selectionInfo.textContent = "";
+                }
             }
 
             handleTabKey(e) {
