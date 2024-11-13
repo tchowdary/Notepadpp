@@ -244,6 +244,42 @@
             overflow-wrap: break-word;
             overflow-x: hidden;
         }
+
+        /* Add new styles for the selection popup */
+        .selection-popup {
+            position: absolute;
+            background: var(--toolbar-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+        }
+
+        .selection-popup button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            white-space: nowrap;
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        .selection-popup button:hover {
+            background-color: var(--highlight-color);
+        }
+
+        .selection-popup button svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
     </style>
 </head>
 
@@ -316,6 +352,17 @@
     </div>
     <div id="errorMessage" class="error-message"></div>
 
+    <!-- Add new selection popup HTML -->
+    <div id="selectionPopup" class="selection-popup">
+        <button onclick="improveSelectedText()">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+            </svg>
+            Improve Text
+        </button>
+    </div>
+
     <script>
         let tabs = [];
         let activeTabId = null;
@@ -329,6 +376,7 @@
                 this.content = content;
                 this.wordWrap = localStorage.getItem("wordWrap") === "true";
                 this.createElements();
+                this.setupSelectionPopup();
 
                 // Add keyboard shortcut handling to the editor
                 this.editor.addEventListener("keydown", (e) => {
@@ -341,6 +389,93 @@
                 if (this.wordWrap) {
                     this.editor.classList.add("word-wrap");
                 }
+
+                this.editor.addEventListener("keydown", (e) => {
+                    if (e.key === "Tab") {
+                        this.handleTabKey(e);
+                    }
+                });
+
+            }
+
+            setupSelectionPopup() {
+                const popup = document.getElementById('selectionPopup');
+                let selectionTimeout;
+
+                const updatePopupPosition = () => {
+                    const selectedText = this.editor.value.substring(
+                        this.editor.selectionStart,
+                        this.editor.selectionEnd
+                    );
+
+                    if (selectedText) {
+                        // Get the coordinates of the cursor/selection
+                        const editorRect = this.editor.getBoundingClientRect();
+
+                        // Create a temporary div to measure text dimensions
+                        const div = document.createElement('div');
+                        div.style.font = window.getComputedStyle(this.editor).font;
+                        div.style.position = 'absolute';
+                        div.style.whiteSpace = 'pre';
+                        div.style.visibility = 'hidden';
+                        div.textContent = this.editor.value.substring(0, this.editor.selectionStart);
+                        document.body.appendChild(div);
+
+                        // Calculate position based on text measurements
+                        const textWidth = div.offsetWidth;
+                        const lines = div.textContent.split('\\n').length;
+                        const lineHeight = parseInt(window.getComputedStyle(this.editor).lineHeight);
+
+                        document.body.removeChild(div);
+
+                        // Calculate coordinates
+                        const x = editorRect.left + (textWidth % this.editor.clientWidth);
+                        const y = editorRect.top + (lines * lineHeight) - this.editor.scrollTop;
+
+                        // Position the popup
+                        popup.style.display = 'block';
+                        popup.style.left = Math.min(
+                            x,
+                            editorRect.right - popup.offsetWidth - 10
+                        ) + 'px';
+                        popup.style.top = (y - popup.offsetHeight - 10) + 'px';
+                    } else {
+                        popup.style.display = 'none';
+                    }
+                };
+
+                this.editor.addEventListener('mouseup', () => {
+                    clearTimeout(selectionTimeout);
+                    selectionTimeout = setTimeout(updatePopupPosition, 100);
+                });
+
+                this.editor.addEventListener('keyup', (e) => {
+                    if (e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+                        clearTimeout(selectionTimeout);
+                        selectionTimeout = setTimeout(updatePopupPosition, 100);
+                    }
+                });
+
+                // Hide popup when clicking outside
+                document.addEventListener('mousedown', (e) => {
+                    if (!popup.contains(e.target) && e.target !== this.editor) {
+                        popup.style.display = 'none';
+                    }
+                });
+
+                // Update popup position on scroll
+                this.editor.addEventListener('scroll', () => {
+                    if (popup.style.display === 'block') {
+                        updatePopupPosition();
+                    }
+                });
+
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    if (popup.style.display === 'block') {
+                        updatePopupPosition();
+                    }
+                });
             }
 
             createElements() {
