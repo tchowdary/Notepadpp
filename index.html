@@ -480,8 +480,26 @@
                     if (e.key === "Tab") {
                         this.handleTabKey(e);
                     }
+
+                    // Add horizontal line shortcut (Ctrl + -)
+                    if (e.ctrlKey && e.key === "l") {
+                        e.preventDefault();
+                        this.insertHorizontalLine();
+                    }
                 });
 
+
+            }
+
+            insertHorizontalLine() {
+                const pos = this.editor.selectionStart;
+                const value = this.editor.value;
+                const horizontalLine = "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+
+                this.editor.value = value.slice(0, pos) + horizontalLine + value.slice(pos);
+                this.editor.selectionStart = this.editor.selectionEnd = pos + horizontalLine.length;
+                this.updateLineNumbers();
+                this.saveToLocalStorage();
             }
 
             async saveToIndexedDB() {
@@ -690,19 +708,55 @@
                 }
             }
 
+
             handleTabKey(e) {
-                if (e.key === "Tab") {
-                    e.preventDefault();
-                    const start = this.editor.selectionStart;
-                    const end = this.editor.selectionEnd;
-                    this.editor.value =
-                        this.editor.value.substring(0, start) +
-                        "    " +
-                        this.editor.value.substring(end);
-                    this.editor.selectionStart = this.editor.selectionEnd = start + 4;
+                if (e.key !== 'Tab') return;
+
+                e.preventDefault();
+                const start = this.editor.selectionStart;
+                const end = this.editor.selectionEnd;
+                const text = this.editor.value;
+
+                // Simple tab insertion if no text is selected
+                if (start === end) {
+                    this.editor.value = text.slice(0, start) + '  ' + text.slice(end);
+                    this.editor.selectionStart = this.editor.selectionEnd = start + 2;
                     this.updateLineNumbers();
                     this.saveToLocalStorage();
+                    return;
                 }
+
+                // Handle selected text
+                let startLine = text.lastIndexOf('\n', start - 1) + 1;
+                let endLine = text.indexOf('\n', end);
+                if (endLine === -1) endLine = text.length;
+
+                const selectedLines = text.slice(startLine, endLine).split('\n');
+
+                if (e.shiftKey) {
+                    const unindentedLines = selectedLines.map(line => {
+                        return line.startsWith('  ') ? line.slice(2) : line;
+                    });
+
+                    this.editor.value = text.slice(0, startLine) +
+                        unindentedLines.join('\n') +
+                        text.slice(endLine);
+
+                    this.editor.selectionStart = startLine;
+                    this.editor.selectionEnd = startLine + unindentedLines.join('\n').length;
+                } else {
+                    const indentedLines = selectedLines.map(line => '  ' + line);
+
+                    this.editor.value = text.slice(0, startLine) +
+                        indentedLines.join('\n') +
+                        text.slice(endLine);
+
+                    this.editor.selectionStart = startLine;
+                    this.editor.selectionEnd = startLine + indentedLines.join('\n').length;
+                }
+
+                this.updateLineNumbers();
+                this.saveToLocalStorage();
             }
 
             activate() {
