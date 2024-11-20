@@ -340,21 +340,75 @@
         width: 100px;
       }
 
-      /* Add new styles for preview feature */
-      /* Add new styles for preview feature */
-.preview-mode .editor-container {
-    width: 40%;
-}
+      * Table styles */ .table-container {
+        overflow-x: auto;
+        margin: 1em 0;
+      }
 
-.preview-panel {
-    display: none;
-    width: 100%;
-    padding: 20px;
-    background-color: var(--bg-color);
-    border-left: 1px solid var(--border-color);
-    overflow-y: auto;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
+      .preview-panel table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1.5em 0;
+        font-size: 0.95em;
+        min-width: 400px;
+        border: 1px solid var(--border-color);
+      }
+
+      .preview-panel thead {
+        background-color: var(--toolbar-bg);
+      }
+
+      .preview-panel th {
+        background-color: var(--toolbar-bg);
+        border: 1px solid var(--border-color);
+        padding: 12px 15px;
+        font-weight: bold;
+        text-align: left;
+      }
+
+      .preview-panel td {
+        border: 1px solid var(--border-color);
+        padding: 12px 15px;
+        vertical-align: top;
+        line-height: 1.4;
+      }
+
+      .preview-panel tr:nth-child(even) {
+        background-color: var(--tab-bg);
+      }
+
+      .preview-panel tr:hover {
+        background-color: var(--highlight-color);
+        transition: background-color 0.2s ease;
+      }
+
+      /* Handle long content in cells */
+      .preview-panel td,
+      .preview-panel th {
+        max-width: 300px;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+      }
+
+      /* Emoji in tables */
+      .preview-panel td:last-child {
+        text-align: center;
+        font-size: 1.1em;
+      }
+      .preview-mode .editor-container {
+        display: none;
+      }
+
+      .preview-panel {
+        display: none;
+        width: 100%;
+        padding: 20px 40px;
+        background-color: var(--bg-color);
+        border-left: 1px solid var(--border-color);
+        overflow-y: auto;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
 
       .preview-mode .preview-panel {
         display: block;
@@ -442,18 +496,18 @@
 
   <body>
     <div class="toolbar">
-      <button onclick="newFile()" title="New File">
+      <!-- <button onclick="newFile()" title="New File">
         <svg viewBox="0 0 24 24">
           <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
         </svg>
-      </button>
-      <button onclick="saveCurrentFile()" title="Save">
+      </button> -->
+      <!-- <button onclick="saveCurrentFile()" title="Save">
         <svg viewBox="0 0 24 24">
           <path
             d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4zm2 16H5V5h11.17L19 7.83V19zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
           />
         </svg>
-      </button>
+      </button> -->
       <button onclick="downloadCurrentFile()" title="Download">
         <svg viewBox="0 0 24 24">
           <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
@@ -490,7 +544,7 @@
           />
         </svg>
       </button>
-      <button
+      <!-- <button
         onclick="improveSelectedText()"
         title="Improve Text"
         class="improve-text"
@@ -500,7 +554,7 @@
             d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
           />
         </svg>
-      </button>
+      </button> -->
       <button onclick="convertTimestamp()" title="Convert Time">
         <svg viewBox="0 0 24 24">
           <path
@@ -1007,15 +1061,19 @@
         }
       }
 
-      // Modified createTab function to handle word wrap
       function createTab(
         name = "Untitled",
         content = "",
         id = Date.now().toString()
       ) {
+        // Reset preview mode when creating a new tab
+        const contentContainer = document.querySelector(".content-container");
+        if (contentContainer.classList.contains("preview-mode")) {
+          togglePreview(); // Switch back to edit mode
+        }
+
         // Create tab button
         const tabButton = document.createElement("button");
-
         tabButton.className = "tab";
         tabButton.innerHTML = `<span class="tab-name" data-tab-id="${id}">${name}</span>
     <button class="tab-close" onclick="closeTab('${id}', event)">×</button>`;
@@ -1026,15 +1084,16 @@
         const tab = new Tab(id, name, content);
         tabs.push({ id, tab, button: tabButton });
 
-        // Apply word wrap setting if enabled
-        if (localStorage.getItem("wordWrap") === "true") {
-          tab.editor.classList.add("word-wrap");
-        }
-
         return id;
       }
 
       function setActiveTab(id) {
+        // Reset preview mode when switching tabs
+        const contentContainer = document.querySelector(".content-container");
+        if (contentContainer.classList.contains("preview-mode")) {
+          togglePreview(); // Switch back to edit mode
+        }
+
         // Deactivate current tab
         if (activeTabId) {
           const currentTab = tabs.find((t) => t.id === activeTabId);
@@ -1050,13 +1109,6 @@
           newTab.tab.activate();
           newTab.button.classList.add("active");
           activeTabId = id;
-        }
-        if (
-          document
-            .querySelector(".content-container")
-            .classList.contains("preview-mode")
-        ) {
-          updatePreview();
         }
       }
 
@@ -1399,17 +1451,29 @@
         showError(newWordWrap ? "Word wrap enabled" : "Word wrap disabled");
       }
 
-      // Add new functions for Markdown preview
       function togglePreview() {
         const contentContainer = document.querySelector(".content-container");
         const previewPanel = document.getElementById("previewPanel");
         const isPreviewMode = contentContainer.classList.toggle("preview-mode");
+        const previewButton = document.querySelector(
+          '[title="Toggle Preview"]'
+        );
 
         if (isPreviewMode) {
           updatePreview();
+          previewButton.innerHTML = `
+                  <svg viewBox="0 0 24 24">
+                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                  </svg>`;
+          previewButton.title = "Edit Mode";
+        } else {
+          previewButton.innerHTML = `
+                  <svg viewBox="0 0 24 24">
+                      <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                  </svg>`;
+          previewButton.title = "Toggle Preview";
         }
       }
-
       function updatePreview() {
         const tab = getCurrentTab();
         if (!tab) return;
