@@ -486,10 +486,14 @@
                         e.preventDefault();
                         this.insertHorizontalLine();
                     }
+                    if (e.ctrlKey && e.key === "Enter") {
+                        e.preventDefault();
+                        this.toggleDoneStatus();
+                    }
                 });
 
-
             }
+
 
             insertHorizontalLine() {
                 const pos = this.editor.selectionStart;
@@ -543,6 +547,31 @@
                         }
                     });
                 });
+            }
+
+            toggleDoneStatus() {
+                const start = this.editor.selectionStart;
+                const text = this.editor.value;
+                const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+                const lineEnd = text.indexOf('\n', start);
+                const currentLine = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd);
+
+                const doneEmoji = '✅';
+                const notDoneEmoji = '⬜';
+
+                let newLine;
+                if (currentLine.startsWith(doneEmoji)) {
+                    newLine = currentLine.replace(doneEmoji, notDoneEmoji);
+                } else if (currentLine.startsWith(notDoneEmoji)) {
+                    newLine = currentLine.replace(notDoneEmoji, doneEmoji);
+                } else {
+                    newLine = notDoneEmoji + ' ' + currentLine;
+                }
+
+                this.editor.value = text.slice(0, lineStart) + newLine + text.slice(lineEnd === -1 ? text.length : lineEnd);
+                this.editor.selectionStart = this.editor.selectionEnd = lineStart;
+                this.updateLineNumbers();
+                this.saveToLocalStorage();
             }
 
             setupSelectionPopup() {
