@@ -100,8 +100,8 @@
         flex-direction: column;
         flex: 1;
         overflow: hidden;
+        min-height: 0; /* Added for Firefox */
       }
-
       .toolbar {
         background-color: var(--toolbar-bg);
         padding: 8px;
@@ -179,10 +179,10 @@
       }
 
       .editor-container {
-        display: flex;
-        flex-grow: 1;
+        flex: 1; /* Changed from flex-grow: 1 */
         overflow: hidden;
         position: relative;
+        min-height: 0; /* Added for Firefox */
       }
 
       .editor-wrapper {
@@ -234,6 +234,7 @@
       }
 
       .status-bar {
+        flex-shrink: 0; /* Added to prevent shrinking */
         background-color: var(--toolbar-bg);
         padding: 4px 8px;
         font-size: 12px;
@@ -401,13 +402,10 @@
 
       .preview-panel {
         display: none;
-        width: 100%;
+        flex: 1; /* Added */
         padding: 20px 40px;
-        background-color: var(--bg-color);
-        border-left: 1px solid var(--border-color);
         overflow-y: auto;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
+        min-height: 0; /* Added for Firefox */
       }
 
       .preview-mode .preview-panel {
