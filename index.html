@@ -49,6 +49,54 @@
             flex-direction: column;
         }
 
+        /* Modified layout styles */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .tabs-container {
+            width: 200px;
+            background-color: var(--toolbar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .tab {
+            padding: 8px;
+            background-color: var(--tab-bg);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            text-align: left;
+        }
+
+        .tab.active {
+            background-color: var(--tab-active-bg);
+            border-left: 3px solid #007acc;
+        }
+
+        .tab-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .content-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
         .toolbar {
             background-color: var(--toolbar-bg);
             padding: 8px;
@@ -104,11 +152,6 @@
             gap: 8px;
             min-width: 120px;
             max-width: 200px;
-        }
-
-        .tab.active {
-            background-color: var(--tab-active-bg);
-            border-bottom: 2px solid #007acc;
         }
 
         .tab-close {
@@ -355,12 +398,17 @@
             </svg>
         </button>
     </div>
-    <div class="tabs-container" id="tabsContainer"></div>
-    <div class="editor-container" id="editorContainer"></div>
-    <div class="status-bar">
-        <span id="statusFileName">Untitled</span>
-        <span id="selectionInfo"></span>
-        <span id="statusInfo">Ln 1, Col 1</span>
+    <div class="main-container">
+
+        <div class="content-container">
+            <div class="editor-container" id="editorContainer"></div>
+            <div class="status-bar">
+                <span id="statusFileName">Untitled</span>
+                <span id="selectionInfo"></span>
+                <span id="statusInfo">Ln 1, Col 1</span>
+            </div>
+        </div>
+        <div class="tabs-container" id="tabsContainer"></div>
     </div>
 
     <div id="errorMessage" class="error-message"></div>
