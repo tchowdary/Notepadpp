@@ -280,6 +280,17 @@
             height: 16px;
             fill: currentColor;
         }
+
+        .tab-name-input {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 2px 4px;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            width: 100px;
+        }
     </style>
 </head>
 
@@ -377,6 +388,7 @@
                 this.content = content;
                 this.wordWrap = localStorage.getItem("wordWrap") === "true";
                 this.createElements();
+                this.setupTabNameEditing(); // Add this line
                 this.setupSelectionPopup();
 
                 // Add keyboard shortcut handling to the editor
@@ -397,6 +409,39 @@
                     }
                 });
 
+            }
+
+            setupTabNameEditing() {
+                const nameSpan = document.querySelector(`.tab-name[data-tab-id="${this.id}"]`);
+                nameSpan.addEventListener('dblclick', (e) => {
+                    e.stopPropagation();
+                    const input = document.createElement('input');
+                    input.value = this.name;
+                    input.className = 'tab-name-input';
+                    nameSpan.replaceWith(input);
+                    input.focus();
+                    input.select();
+
+                    const handleRename = () => {
+                        const newName = input.value.trim() || "Untitled";
+                        this.name = newName;
+                        const newSpan = document.createElement('span');
+                        newSpan.className = 'tab-name';
+                        newSpan.setAttribute('data-tab-id', this.id);
+                        newSpan.textContent = newName;
+                        input.replaceWith(newSpan);
+                        document.getElementById("statusFileName").textContent = newName;
+                        this.saveToLocalStorage();
+                        this.setupTabNameEditing();
+                    };
+
+                    input.addEventListener('blur', handleRename);
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            handleRename();
+                        }
+                    });
+                });
             }
 
             setupSelectionPopup() {
@@ -631,11 +676,10 @@
         ) {
             // Create tab button
             const tabButton = document.createElement("button");
+
             tabButton.className = "tab";
-            tabButton.innerHTML = `
-                <span>${name}</span>
-                <button class="tab-close" onclick="closeTab('${id}', event)">×</button>
-            `;
+            tabButton.innerHTML = `<span class="tab-name" data-tab-id="${id}">${name}</span>
+    <button class="tab-close" onclick="closeTab('${id}', event)">×</button>`;
             tabButton.onclick = () => setActiveTab(id);
             document.getElementById("tabsContainer").appendChild(tabButton);
 
