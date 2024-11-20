@@ -765,7 +765,9 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = tab.name;
+                // Add .md extension if not already present
+                const fileName = tab.name.endsWith('.md') ? tab.name : `${tab.name}.md`;
+                a.download = fileName;
                 a.click();
                 URL.revokeObjectURL(url);
             }
