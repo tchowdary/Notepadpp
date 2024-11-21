@@ -66,6 +66,14 @@ class Tab {
       }
     });
 
+    document.addEventListener('keydown', (e) => {
+      // Add this case to existing keyboard shortcuts
+      if (e.altKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        togglePreview();
+      }
+    });
+
     // Add preview update to input event
     this.editor.addEventListener("input", () => {
       this.updateLineNumbers();
