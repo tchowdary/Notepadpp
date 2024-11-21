@@ -1,0 +1,1071 @@
+let tabs = [];
+let activeTabId = null;
+let currentTheme = "dark";
+
+// Add this at the start of your JavaScript code
+const dbName = "EditorDB";
+const dbVersion = 1;
+let db;
+
+// Initialize IndexedDB
+async function initDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, dbVersion);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      db = request.result;
+      resolve(db);
+    };
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains("tabs")) {
+        db.createObjectStore("tabs", { keyPath: "id" });
+      }
+    };
+  });
+}
+
+// Tab class to manage individual tabs
+class Tab {
+  constructor(id, name = "Untitled", content = "") {
+    this.id = id;
+    this.name = name;
+    this.content = content;
+    this.wordWrap = localStorage.getItem("wordWrap") === "true";
+    this.createElements();
+    this.setupTabNameEditing(); // Add this line
+    this.setupSelectionPopup();
+
+    // Add keyboard shortcut handling to the editor
+    this.editor.addEventListener("keydown", (e) => {
+      if (e.key === "Tab") {
+        this.handleTabKey(e);
+      }
+    });
+
+    // Apply word wrap setting
+    if (this.wordWrap) {
+      this.editor.classList.add("word-wrap");
+    }
+
+    this.editor.addEventListener("keydown", (e) => {
+      if (e.key === "Tab") {
+        this.handleTabKey(e);
+      }
+
+      // Add horizontal line shortcut (Ctrl + -)
+      if (e.ctrlKey && e.key === "l") {
+        e.preventDefault();
+        this.insertHorizontalLine();
+      }
+      if (e.ctrlKey && e.key === "Enter") {
+        e.preventDefault();
+        this.toggleDoneStatus();
+      }
+    });
+
+    // Add preview update to input event
+    this.editor.addEventListener("input", () => {
+      this.updateLineNumbers();
+      this.saveToLocalStorage();
+      if (
+        document
+          .querySelector(".content-container")
+          .classList.contains("preview-mode")
+      ) {
+        updatePreview();
+      }
+    });
+  }
+
+  insertHorizontalLine() {
+    const pos = this.editor.selectionStart;
+    const value = this.editor.value;
+    const horizontalLine =
+      "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+
+    this.editor.value =
+      value.slice(0, pos) + horizontalLine + value.slice(pos);
+    this.editor.selectionStart = this.editor.selectionEnd =
+      pos + horizontalLine.length;
+    this.updateLineNumbers();
+    this.saveToLocalStorage();
+  }
+
+  async saveToIndexedDB() {
+    const transaction = db.transaction(["tabs"], "readwrite");
+    const store = transaction.objectStore("tabs");
+    await store.put({
+      id: this.id,
+      name: this.name,
+      content: this.editor.value,
+    });
+  }
+
+  setupTabNameEditing() {
+    const nameSpan = document.querySelector(
+      `.tab-name[data-tab-id="${this.id}"]`
+    );
+    nameSpan.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+      const input = document.createElement("input");
+      input.value = this.name;
+      input.className = "tab-name-input";
+      nameSpan.replaceWith(input);
+      input.focus();
+      input.select();
+
+      const handleRename = () => {
+        const newName = input.value.trim() || "Untitled";
+        this.name = newName;
+        const newSpan = document.createElement("span");
+        newSpan.className = "tab-name";
+        newSpan.setAttribute("data-tab-id", this.id);
+        newSpan.textContent = newName;
+        input.replaceWith(newSpan);
+        document.getElementById("statusFileName").textContent = newName;
+        this.saveToLocalStorage();
+        this.setupTabNameEditing();
+      };
+
+      input.addEventListener("blur", handleRename);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          handleRename();
+        }
+      });
+    });
+  }
+
+  toggleDoneStatus() {
+    const start = this.editor.selectionStart;
+    const text = this.editor.value;
+    const lineStart = text.lastIndexOf("\n", start - 1) + 1;
+    const lineEnd = text.indexOf("\n", start);
+    const currentLine = text.slice(
+      lineStart,
+      lineEnd === -1 ? text.length : lineEnd
+    );
+
+    const doneEmoji = "- ✅";
+    const notDoneEmoji = "- ⬜";
+
+    let newLine;
+    if (currentLine.startsWith(doneEmoji)) {
+      newLine = currentLine.replace(doneEmoji, notDoneEmoji);
+    } else if (currentLine.startsWith(notDoneEmoji)) {
+      newLine = currentLine.replace(notDoneEmoji, doneEmoji);
+    } else {
+      newLine = notDoneEmoji + " " + currentLine;
+    }
+
+    this.editor.value =
+      text.slice(0, lineStart) +
+      newLine +
+      text.slice(lineEnd === -1 ? text.length : lineEnd);
+    this.editor.selectionStart = this.editor.selectionEnd = lineStart;
+    this.updateLineNumbers();
+    this.saveToLocalStorage();
+  }
+
+  setupSelectionPopup() {
+    const popup = document.getElementById("selectionPopup");
+    let selectionTimeout;
+
+    const updatePopupPosition = () => {
+      const selectedText = this.editor.value.substring(
+        this.editor.selectionStart,
+        this.editor.selectionEnd
+      );
+
+      if (selectedText) {
+        // Get the coordinates of the cursor/selection
+        const editorRect = this.editor.getBoundingClientRect();
+
+        // Create a temporary div to measure text dimensions
+        const div = document.createElement("div");
+        div.style.font = window.getComputedStyle(this.editor).font;
+        div.style.position = "absolute";
+        div.style.whiteSpace = "pre";
+        div.style.visibility = "hidden";
+        div.textContent = this.editor.value.substring(
+          0,
+          this.editor.selectionStart
+        );
+        document.body.appendChild(div);
+
+        // Calculate position based on text measurements
+        const textWidth = div.offsetWidth;
+        const lines = div.textContent.split("\\n").length;
+        const lineHeight = parseInt(
+          window.getComputedStyle(this.editor).lineHeight
+        );
+
+        document.body.removeChild(div);
+
+        // Calculate coordinates
+        const x = editorRect.left + (textWidth % this.editor.clientWidth);
+        const y =
+          editorRect.top + lines * lineHeight - this.editor.scrollTop;
+
+        // Position the popup
+        popup.style.display = "block";
+        popup.style.left =
+          Math.min(x, editorRect.right - popup.offsetWidth - 10) + "px";
+        popup.style.top = y - popup.offsetHeight - 10 + "px";
+      } else {
+        popup.style.display = "none";
+      }
+    };
+
+    this.editor.addEventListener("mouseup", () => {
+      clearTimeout(selectionTimeout);
+      selectionTimeout = setTimeout(updatePopupPosition, 100);
+    });
+
+    this.editor.addEventListener("keyup", (e) => {
+      if (
+        e.shiftKey &&
+        (e.key === "ArrowLeft" || e.key === "ArrowRight")
+      ) {
+        clearTimeout(selectionTimeout);
+        selectionTimeout = setTimeout(updatePopupPosition, 100);
+      }
+    });
+
+    // Hide popup when clicking outside
+    document.addEventListener("mousedown", (e) => {
+      if (!popup.contains(e.target) && e.target !== this.editor) {
+        popup.style.display = "none";
+      }
+    });
+
+    // Update popup position on scroll
+    this.editor.addEventListener("scroll", () => {
+      if (popup.style.display === "block") {
+        updatePopupPosition();
+      }
+    });
+
+    // Handle window resize
+    window.addEventListener("resize", () => {
+      if (popup.style.display === "block") {
+        updatePopupPosition();
+      }
+    });
+  }
+
+  createElements() {
+    // Create editor wrapper
+    this.editorWrapper = document.createElement("div");
+    this.editorWrapper.className = "editor-wrapper";
+    this.editorWrapper.id = `editor-wrapper-${this.id}`;
+
+    // Create line numbers
+    this.lineNumbers = document.createElement("div");
+    this.lineNumbers.className = "line-numbers";
+
+    // Create editor
+    this.editor = document.createElement("textarea");
+    this.editor.className = "editor";
+    this.editor.value = this.content;
+    this.editor.spellcheck = false;
+
+    // Add event listeners
+    this.editor.addEventListener("input", () => {
+      this.updateLineNumbers();
+      this.saveToLocalStorage();
+    });
+    this.editor.addEventListener("scroll", () => {
+      this.lineNumbers.scrollTop = this.editor.scrollTop;
+    });
+    this.editor.addEventListener("keyup", () => this.updateStatusBar());
+    this.editor.addEventListener("click", () => this.updateStatusBar());
+    this.editor.addEventListener("scroll", () => this.updateStatusBar());
+    this.editor.addEventListener("keydown", this.handleTabKey.bind(this));
+
+    // Assemble elements
+    this.editorWrapper.appendChild(this.lineNumbers);
+    this.editorWrapper.appendChild(this.editor);
+    document
+      .getElementById("editorContainer")
+      .appendChild(this.editorWrapper);
+
+    this.updateLineNumbers();
+  }
+
+  updateLineNumbers() {
+    const lines = this.editor.value.split("\n");
+    const lineCount = lines.length;
+    const lineNumbersContent = Array.from(
+      { length: lineCount },
+      (_, i) => {
+        const div = document.createElement("div");
+        div.textContent = i + 1;
+        return div;
+      }
+    );
+    this.lineNumbers.innerHTML = "";
+    lineNumbersContent.forEach((div) =>
+      this.lineNumbers.appendChild(div)
+    );
+  }
+
+  updateStatusBar() {
+    const text = this.editor.value;
+    const position = this.editor.selectionStart;
+    const lines = text.substr(0, position).split("\n");
+    const currentLine = lines.length;
+    const currentColumn = lines[lines.length - 1].length + 1;
+
+    document.getElementById(
+      "statusInfo"
+    ).textContent = `Ln ${currentLine}, Col ${currentColumn}`;
+
+    // Get selected text length
+    const selectionStart = this.editor.selectionStart;
+    const selectionEnd = this.editor.selectionEnd;
+    const selectedText = this.editor.value.substring(
+      selectionStart,
+      selectionEnd
+    );
+    const selectedLength = selectedText.length;
+    const selectedWords = selectedText
+      ? selectedText
+        .trim()
+        .split(/\s+/)
+        .filter((word) => word.length > 0).length
+      : 0;
+
+    // Update selection info
+    const selectionInfo = document.getElementById("selectionInfo");
+    if (selectedLength > 0) {
+      selectionInfo.textContent = `Sel ${selectedLength} chr, ${selectedWords} words`;
+    } else {
+      selectionInfo.textContent = "";
+    }
+  }
+
+  handleTabKey(e) {
+    if (e.key !== "Tab") return;
+
+    e.preventDefault();
+    const start = this.editor.selectionStart;
+    const end = this.editor.selectionEnd;
+    const text = this.editor.value;
+
+    // Simple tab insertion if no text is selected
+    if (start === end) {
+      this.editor.value = text.slice(0, start) + "  " + text.slice(end);
+      this.editor.selectionStart = this.editor.selectionEnd = start + 2;
+      this.updateLineNumbers();
+      this.saveToLocalStorage();
+      return;
+    }
+
+    // Handle selected text
+    let startLine = text.lastIndexOf("\n", start - 1) + 1;
+    let endLine = text.indexOf("\n", end);
+    if (endLine === -1) endLine = text.length;
+
+    const selectedLines = text.slice(startLine, endLine).split("\n");
+
+    if (e.shiftKey) {
+      const unindentedLines = selectedLines.map((line) => {
+        return line.startsWith("  ") ? line.slice(2) : line;
+      });
+
+      this.editor.value =
+        text.slice(0, startLine) +
+        unindentedLines.join("\n") +
+        text.slice(endLine);
+
+      this.editor.selectionStart = startLine;
+      this.editor.selectionEnd =
+        startLine + unindentedLines.join("\n").length;
+    } else {
+      const indentedLines = selectedLines.map((line) => "  " + line);
+
+      this.editor.value =
+        text.slice(0, startLine) +
+        indentedLines.join("\n") +
+        text.slice(endLine);
+
+      this.editor.selectionStart = startLine;
+      this.editor.selectionEnd =
+        startLine + indentedLines.join("\n").length;
+    }
+
+    this.updateLineNumbers();
+    this.saveToLocalStorage();
+  }
+
+  activate() {
+    this.editorWrapper.classList.add("active");
+    document.getElementById("statusFileName").textContent = this.name;
+    this.updateStatusBar();
+  }
+
+  deactivate() {
+    this.editorWrapper.classList.remove("active");
+  }
+
+  saveToLocalStorage() {
+    this.saveToIndexedDB().catch(console.error);
+  }
+}
+
+async function initEditor() {
+  try {
+    await initDB();
+
+    const transaction = db.transaction(["tabs"], "readonly");
+    const store = transaction.objectStore("tabs");
+
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const savedTabs = request.result;
+        if (savedTabs && savedTabs.length > 0) {
+          savedTabs.forEach((tabData) => {
+            createTab(tabData.name, tabData.content, tabData.id);
+          });
+          setActiveTab(savedTabs[0].id);
+        } else {
+          createTab();
+        }
+
+        const savedTheme = localStorage.getItem("theme") || "dark";
+        setTheme(savedTheme);
+        resolve();
+      };
+
+      request.onerror = () => {
+        console.error("Error loading tabs:", request.error);
+        createTab();
+        reject(request.error);
+      };
+    });
+  } catch (error) {
+    console.error("Database initialization failed:", error);
+    createTab();
+  }
+}
+
+function createTab(
+  name = "Untitled",
+  content = "",
+  id = Date.now().toString()
+) {
+  // Reset preview mode when creating a new tab
+  const contentContainer = document.querySelector(".content-container");
+  if (contentContainer.classList.contains("preview-mode")) {
+    togglePreview(); // Switch back to edit mode
+  }
+
+  // Create tab button
+  const tabButton = document.createElement("button");
+  tabButton.className = "tab";
+  tabButton.innerHTML = `<span class="tab-name" data-tab-id="${id}">${name}</span>
+    <button class="tab-close" onclick="closeTab('${id}', event)">×</button>`;
+  tabButton.onclick = () => setActiveTab(id);
+  document.getElementById("tabsContainer").appendChild(tabButton);
+
+  // Create new tab instance
+  const tab = new Tab(id, name, content);
+  tabs.push({ id, tab, button: tabButton });
+
+  return id;
+}
+
+function setActiveTab(id) {
+  // Reset preview mode when switching tabs
+  const contentContainer = document.querySelector(".content-container");
+  if (contentContainer.classList.contains("preview-mode")) {
+    togglePreview(); // Switch back to edit mode
+  }
+
+  // Deactivate current tab
+  if (activeTabId) {
+    const currentTab = tabs.find((t) => t.id === activeTabId);
+    if (currentTab) {
+      currentTab.tab.deactivate();
+      currentTab.button.classList.remove("active");
+    }
+  }
+
+  // Activate new tab
+  const newTab = tabs.find((t) => t.id === id);
+  if (newTab) {
+    newTab.tab.activate();
+    newTab.button.classList.add("active");
+    activeTabId = id;
+  }
+}
+
+async function closeTab(id, event) {
+  event.stopPropagation();
+  if (tabs.length === 1) {
+    alert("Cannot close the last tab");
+    return;
+  }
+
+  const tabIndex = tabs.findIndex((t) => t.id === id);
+  if (tabIndex === -1) return;
+
+  // Remove tab from IndexedDB
+  const transaction = db.transaction(["tabs"], "readwrite");
+  const store = transaction.objectStore("tabs");
+  await store.delete(id);
+
+  // Rest of the closeTab function remains the same
+  const tab = tabs[tabIndex];
+  tab.button.remove();
+  tab.tab.editorWrapper.remove();
+  tabs.splice(tabIndex, 1);
+
+  if (activeTabId === id) {
+    const newTabId = tabs[Math.min(tabIndex, tabs.length - 1)].id;
+    setActiveTab(newTabId);
+  }
+}
+
+function getCurrentTab() {
+  return tabs.find((t) => t.id === activeTabId)?.tab;
+}
+
+// File operations
+function newFile() {
+  const id = createTab();
+  setActiveTab(id);
+}
+
+function saveCurrentFile() {
+  const tab = getCurrentTab();
+  if (tab) {
+    tab.saveToLocalStorage();
+    alert("File saved to browser storage");
+  }
+}
+
+function downloadCurrentFile() {
+  const tab = getCurrentTab();
+  if (tab) {
+    const blob = new Blob([tab.editor.value], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    // Add .md extension if not already present
+    const fileName = tab.name.endsWith(".md")
+      ? tab.name
+      : `${tab.name}.md`;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}
+
+function openFile(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const id = createTab(file.name, e.target.result);
+      setActiveTab(id);
+    };
+    reader.readAsText(file);
+  }
+  event.target.value = ""; // Reset file input
+}
+
+// Theme switching
+function toggleTheme() {
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+  setTheme(newTheme);
+}
+
+function setTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  currentTheme = theme;
+  localStorage.setItem("theme", theme);
+}
+
+// Add new function for JSON formatting
+function formatJSON() {
+  const tab = getCurrentTab();
+  if (!tab) return;
+
+  try {
+    const content = tab.editor.value.trim();
+    if (!content) {
+      showError("Editor is empty");
+      return;
+    }
+
+    // Parse and stringify with indentation
+    const parsed = JSON.parse(content);
+    const formatted = JSON.stringify(parsed, null, 4);
+
+    // Update editor content
+    tab.editor.value = formatted;
+    tab.updateLineNumbers();
+    tab.saveToLocalStorage();
+
+    // Set cursor position to start
+    tab.editor.scrollTop = 0;
+    tab.editor.scrollLeft = 0;
+  } catch (error) {
+    showError("Invalid JSON: " + error.message);
+  }
+}
+
+// Add error message handling
+function showError(message) {
+  const errorElement = document.getElementById("errorMessage");
+  errorElement.textContent = message;
+  errorElement.style.display = "block";
+
+  // Hide after 3 seconds
+  setTimeout(() => {
+    errorElement.style.display = "none";
+  }, 3000);
+}
+
+// API Key management
+function setAPIKey() {
+  const currentKey = localStorage.getItem("anthropic_api_key") || "";
+  const apiKey = prompt("Enter your Anthropic API key:", currentKey);
+  if (apiKey !== null) {
+    localStorage.setItem("anthropic_api_key", apiKey);
+    showError("API key saved");
+    updateAPIKeyButtonVisibility();
+  }
+}
+
+function updateAPIKeyButtonVisibility() {
+  const apiKeyButton = document.getElementById("apiKeyButton");
+  const hasApiKey = !!localStorage.getItem("anthropic_api_key");
+  apiKeyButton.style.display = hasApiKey ? "none" : "inline-block";
+}
+
+// Add context menu for Improve Text button to change API key
+document.addEventListener("DOMContentLoaded", () => {
+  const improveButton = document.querySelector(".improve-text");
+  improveButton.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    setAPIKey();
+  });
+  updateAPIKeyButtonVisibility();
+});
+
+async function improveSelectedText() {
+  const tab = getCurrentTab();
+  if (!tab) return;
+
+  const apiKey = localStorage.getItem("anthropic_api_key");
+  if (!apiKey) {
+    showError("Please set your API key first");
+    return;
+  }
+
+  // Get selected text
+  const start = tab.editor.selectionStart;
+  const end = tab.editor.selectionEnd;
+  const selectedText = tab.editor.value.substring(start, end);
+
+  if (!selectedText) {
+    showError("Please select some text to improve");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "https://api.anthropic.com/v1/messages",
+      {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-3-5-sonnet-20241022",
+          max_tokens: 1024,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text:
+                    "You are an expert in writing and grammar, tasked with improving the clarity and correctness of a given text. Your goal is to rewrite the provided text, making it grammatically correct and well-formatted while preserving its original meaning.\n\nHere is the text to rewrite:\n\n<text_to_rewrite>\n" +
+                    selectedText +
+                    "\n</text_to_rewrite>\n\nPlease follow these steps to improve the text:\n\n1. Read and analyze the provided text carefully.\n\n2. In your internal analysis, consider the following aspects:\n   - Spelling mistakes\n   - Punctuation errors\n   - Verb tense issues\n   - Word choice problems\n   - Other grammatical mistakes\n   - Formatting needs (e.g., paragraphs, bullet points)\n   - Tone and style of the original text\n\n3. List out specific examples of errors found in the text.\n\n4. Plan your approach for rewriting the text, including any necessary reorganization.\n\n5. Create a brief outline of the rewritten text.\n\n6. Rewrite the text, making the necessary corrections and improvements. Ensure that you:\n   - Correct all spelling, punctuation, and grammatical errors\n   - Improve clarity and readability\n   - Use appropriate formatting, including paragraphs and bullet points where needed\n   - Preserve the original meaning of the text\n   - Maintain the original tone and style as much as possible\n\n7. Review your rewritten version to ensure it accurately reflects the content and intent of the original text.\n\n8. Present only the final, improved text in your response. Do not include any commentary, explanations, or notes about the changes made.",
+                },
+              ],
+            },
+          ],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || "API request failed");
+    }
+
+    const data = await response.json();
+    const improvedText = data.content[0].text
+      .replace(/^"/, "") // Remove leading quote if present
+      .replace(/"$/, "") // Remove trailing quote if present
+      .replace(/^Here'?s the improved text:?\s*/i, "") // Remove "Here's the improved text:" prefix
+      .trim(); // Remove any extra whitespace
+
+    try {
+      await navigator.clipboard.writeText(improvedText);
+      showError("Improved text copied to clipboard!");
+    } catch (clipboardError) {
+      showError("Failed to copy to clipboard: " + clipboardError.message);
+    }
+
+    // Insert improved text below the selection with a separator
+    const before = tab.editor.value.substring(0, end);
+    const after = tab.editor.value.substring(end);
+    tab.editor.value =
+      before + "\n\n---\n" + improvedText + "\n---\n\n" + after;
+
+    // Update editor state
+    tab.updateLineNumbers();
+    tab.saveToLocalStorage();
+    showError("Text improved successfully");
+  } catch (error) {
+    showError("API Error: " + error.message);
+  }
+}
+
+function convertTimestamp() {
+  const tab = getCurrentTab();
+  if (!tab) return;
+
+  // Get selected text
+  const start = tab.editor.selectionStart;
+  const end = tab.editor.selectionEnd;
+  const selectedText = tab.editor.value.substring(start, end).trim();
+
+  if (!selectedText) {
+    showError("Please select a timestamp to convert");
+    return;
+  }
+
+  try {
+    const timestamp = parseInt(selectedText);
+    if (isNaN(timestamp)) throw new Error("Invalid timestamp");
+
+    // Detect format (milliseconds or seconds) based on length
+    const format =
+      timestamp.toString().length === 13 ? "milliseconds" : "seconds";
+    const ms = format === "seconds" ? timestamp * 1000 : timestamp;
+    const date = new Date(ms);
+
+    if (date.toString() === "Invalid Date")
+      throw new Error("Invalid timestamp");
+
+    // Create formatted result
+    const result = `\n\n---\nFormat: ${format}\nUTC: ${date.toUTCString()}\nLocal: ${date.toString()}\n---\n\n`;
+
+    // Insert result after the selected timestamp
+    const before = tab.editor.value.substring(0, end);
+    const after = tab.editor.value.substring(end);
+    tab.editor.value = before + result + after;
+
+    // Update editor state
+    tab.updateLineNumbers();
+    tab.saveToLocalStorage();
+  } catch (error) {
+    showError("Invalid timestamp format");
+    const convertButton = document.querySelector(".convert-timestamp");
+    convertButton.classList.add("error");
+    setTimeout(() => {
+      convertButton.classList.remove("error");
+    }, 2000);
+  }
+}
+
+// Add keyboard shortcuts handler
+document.addEventListener("keydown", (e) => {
+  // Ctrl+W to close current tab
+  if (e.ctrlKey && e.key === "w") {
+    e.preventDefault();
+    if (activeTabId) {
+      closeTab(activeTabId, new Event("dummy"));
+    }
+  }
+
+  // Escape to clear editor content
+  if (e.key === "Escape") {
+    const tab = getCurrentTab();
+    if (tab) {
+      tab.editor.value = "";
+      tab.updateLineNumbers();
+      tab.saveToLocalStorage();
+    }
+  }
+});
+
+// Add double-click handler for new tab creation
+document
+  .querySelector(".tabs-container")
+  .addEventListener("dblclick", (e) => {
+    // Only create new tab if clicking on the tabs container itself, not on existing tabs
+    if (e.target === document.querySelector(".tabs-container")) {
+      newFile();
+    }
+  });
+
+// Add word wrap toggle function
+function toggleWordWrap() {
+  const wordWrap = localStorage.getItem("wordWrap") === "true";
+  const newWordWrap = !wordWrap;
+  localStorage.setItem("wordWrap", newWordWrap);
+
+  // Apply to all tabs
+  tabs.forEach((tab) => {
+    if (newWordWrap) {
+      tab.tab.editor.classList.add("word-wrap");
+    } else {
+      tab.tab.editor.classList.remove("word-wrap");
+    }
+  });
+
+  // Show feedback
+  showError(newWordWrap ? "Word wrap enabled" : "Word wrap disabled");
+}
+
+function togglePreview() {
+  const contentContainer = document.querySelector(".content-container");
+  const previewPanel = document.getElementById("previewPanel");
+  const isPreviewMode = contentContainer.classList.toggle("preview-mode");
+  const previewButton = document.querySelector(
+    '[title="Toggle Preview"]'
+  );
+
+  if (isPreviewMode) {
+    updatePreview();
+    previewButton.innerHTML = `
+                  <svg viewBox="0 0 24 24">
+                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                  </svg>`;
+    previewButton.title = "Edit Mode";
+  } else {
+    previewButton.innerHTML = `
+                  <svg viewBox="0 0 24 24">
+                      <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                  </svg>`;
+    previewButton.title = "Toggle Preview";
+  }
+}
+function updatePreview() {
+  const tab = getCurrentTab();
+  if (!tab) return;
+
+  const markdown = tab.editor.value;
+  const html = convertMarkdownToHtml(markdown);
+  document.getElementById("previewPanel").innerHTML = html;
+}
+
+function convertMarkdownToHtml(markdown) {
+  // First, process the markdown line by line to handle nested lists
+  let lines = markdown.split("\n");
+  let inList = false;
+  let listType = null; // 'ul' or 'ol'
+  let listStack = [];
+  let processedLines = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+    let match = line.match(/^(\s*)([-*+]|\d+\.)\s+(.*)/);
+
+    if (match) {
+      // This is a list item
+      let [, indent, bullet, content] = match;
+      let indentLevel = Math.floor(indent.length / 2);
+      let isOrdered = /^\d+\./.test(bullet);
+      let currentListType = isOrdered ? "ol" : "ul";
+
+      if (!inList) {
+        // Start a new list
+        inList = true;
+        listType = currentListType;
+        listStack = [listType];
+        processedLines.push(`<${listType}>`);
+      }
+
+      // Handle indent level changes
+      while (listStack.length - 1 > indentLevel) {
+        processedLines.push(`</li></${listStack.pop()}>`);
+      }
+
+      while (listStack.length - 1 < indentLevel) {
+        let newListType = currentListType;
+        processedLines[processedLines.length - 1] += `<${newListType}>`;
+        listStack.push(newListType);
+      }
+
+      if (
+        listStack[listStack.length - 1] !== currentListType &&
+        indentLevel > 0
+      ) {
+        processedLines[
+          processedLines.length - 1
+        ] += `<${currentListType}>`;
+        listStack[listStack.length - 1] = currentListType;
+      }
+
+      processedLines.push(`<li>${content}`);
+    } else {
+      // Not a list item
+      if (inList) {
+        // Close all open lists
+        while (listStack.length > 0) {
+          processedLines.push(`</li></${listStack.pop()}>`);
+        }
+        inList = false;
+      }
+      processedLines.push(line);
+    }
+  }
+
+  // Close any remaining open lists
+  if (inList) {
+    while (listStack.length > 0) {
+      processedLines.push(`</li></${listStack.pop()}>`);
+    }
+  }
+
+  let html = processedLines
+    .join("\n")
+    // Headers
+    .replace(/^# (.*$)/gm, "<h1>$1</h1>")
+    .replace(/^## (.*$)/gm, "<h2>$1</h2>")
+    .replace(/^### (.*$)/gm, "<h3>$1</h3>")
+    .replace(/^#### (.*$)/gm, "<h4>$1</h4>")
+    .replace(/^##### (.*$)/gm, "<h5>$1</h5>")
+    .replace(/^###### (.*$)/gm, "<h6>$1</h6>")
+
+    // Bold and Italic
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/_(.*?)_/g, "<em>$1</em>")
+
+    // Code blocks
+    .replace(/```([^`]+)```/g, "<pre><code>$1</code></pre>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+
+    // Process lists with proper nesting
+    .replace(
+      /@(\d+)@[-*+]\s+(.*?)(?=(\n|$))/g,
+      (match, level, content) => {
+        const indent = "  ".repeat(parseInt(level));
+        return `${indent}<li>${content}</li>`;
+      }
+    )
+    .replace(
+      /@(\d+)@(\d+)\.\s+(.*?)(?=(\n|$))/g,
+      (match, level, num, content) => {
+        const indent = "  ".repeat(parseInt(level));
+        return `${indent}<li>${content}</li>`;
+      }
+    )
+
+    // Wrap lists in proper ul/ol tags
+    .replace(/(<li>.*?<\/li>(\n|$))+/g, (match) => {
+      const isOrdered = /\d+\.\s/.test(match);
+      return `<${isOrdered ? "ol" : "ul"}>${match}</${isOrdered ? "ol" : "ul"
+        }>`;
+    })
+
+    // Links - Handle both markdown links and plain URLs
+    .replace(
+      /\[([^\]]+)\]\(([^)]+)\)/g,
+      '<a href="$2" target="_blank">$1</a>'
+    )
+    .replace(
+      /(?<!["'=])(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g,
+      '<a href="$1" target="_blank">$1</a>'
+    )
+
+    // Images
+    .replace(/!\[([^\]]+)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">')
+
+    // Blockquotes
+    .replace(/^\> (.*$)/gm, "<blockquote>$1</blockquote>")
+
+    // Horizontal rules
+    .replace(/^(-{3,}|\*{3,}|_{3,})$/gm, "<hr>")
+
+    // Paragraphs
+    .replace(
+      /^(?!<[^>]+>)((?:[^<]|<(?!\/?(h[1-6]|ul|ol|li|blockquote|pre|code)>))+)$/gm,
+      "<p>$1</p>"
+    );
+
+  // Clean up list nesting
+  html = html
+    .replace(/<\/ul>\s*<ul>/g, "")
+    .replace(/<\/ol>\s*<ol>/g, "")
+    // Fix any remaining list markers
+    .replace(/@\d+@/g, "");
+
+  // Handle task lists
+  html = html.replace(/\[ \]/g, "☐").replace(/\[x\]/g, "☒");
+
+  return html;
+}
+
+// Update the script initialization
+document.addEventListener("DOMContentLoaded", () => {
+  initEditor().catch(console.error);
+});
+
+// // Add focus mode toggle button
+// const focusModeBtn = document.createElement('button');
+// focusModeBtn.className = 'focus-mode-btn';
+// focusModeBtn.innerHTML = 'Exit Focus Mode (Ctrl + M)';
+// document.body.appendChild(focusModeBtn);
+
+// Add focus mode toggle functionality
+function toggleFocusMode() {
+  document.body.classList.toggle('focus-mode');
+  updateLocalStorage();
+}
+
+// Update focus mode state in localStorage
+function updateLocalStorage() {
+  localStorage.setItem('focusMode', document.body.classList.contains('focus-mode'));
+}
+
+// Initialize focus mode from localStorage
+function initFocusMode() {
+  const focusMode = localStorage.getItem('focusMode') === 'true';
+  if (focusMode) {
+    document.body.classList.add('focus-mode');
+  }
+}
+
+// Add keyboard shortcut handler
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key.toLowerCase() === 'm') {
+    e.preventDefault();
+    toggleFocusMode();
+  }
+});
+
+// Add click handler for focus mode button
+focusModeBtn.addEventListener('click', toggleFocusMode);
+
+// Initialize focus mode on load
+document.addEventListener('DOMContentLoaded', initFocusMode);
