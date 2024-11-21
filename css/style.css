@@ -498,13 +498,14 @@ body {
 
 /* Add new focus mode styles */
 .focus-mode .editor {
-  font-family: "Rubik", serif;
+  font-family: "Crimson Text", serif;
   transition: all 0.3s ease;
   padding: 2rem;
-  line-height: 1.6;
+  line-height: 1.8;
   background: transparent;
   border: none;
   font-size: 17px !important;
+  letter-spacing: -0.011em;
 }
 
 .focus-mode .content-container {
@@ -560,4 +561,48 @@ body {
 
 #apiKeyButton.show {
   display: inline-block;
+}
+
+/* Add styles for the copy button */
+.copy-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.copy-button:hover {
+  transform: translateY(-1px);
+  background-color: var(--tab-active-bg);
+}
+
+.copy-button svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor; /* Uses the current text color */
+}
+
+/* Ensure proper positioning context for the editor container */
+.editor-container {
+  position: relative;
+}
+
+/* Add animation for copy feedback */
+@keyframes copyFeedback {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.copy-feedback {
+  animation: copyFeedback 0.3s ease;
 }
