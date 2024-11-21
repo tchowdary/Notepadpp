@@ -100,8 +100,10 @@
         flex-direction: column;
         flex: 1;
         overflow: hidden;
-        min-height: 0; /* Added for Firefox */
+        min-height: 0;
+        /* Added for Firefox */
       }
+
       .toolbar {
         background-color: var(--toolbar-bg);
         padding: 8px;
@@ -179,10 +181,12 @@
       }
 
       .editor-container {
-        flex: 1; /* Changed from flex-grow: 1 */
+        flex: 1;
+        /* Changed from flex-grow: 1 */
         overflow: hidden;
         position: relative;
-        min-height: 0; /* Added for Firefox */
+        min-height: 0;
+        /* Added for Firefox */
       }
 
       .editor-wrapper {
@@ -234,7 +238,8 @@
       }
 
       .status-bar {
-        flex-shrink: 0; /* Added to prevent shrinking */
+        flex-shrink: 0;
+        /* Added to prevent shrinking */
         background-color: var(--toolbar-bg);
         padding: 4px 8px;
         font-size: 12px;
@@ -396,16 +401,19 @@
         text-align: center;
         font-size: 1.1em;
       }
+
       .preview-mode .editor-container {
         display: none;
       }
 
       .preview-panel {
         display: none;
-        flex: 1; /* Added */
+        flex: 1;
+        /* Added */
         padding: 20px 40px;
         overflow-y: auto;
-        min-height: 0; /* Added for Firefox */
+        min-height: 0;
+        /* Added for Firefox */
       }
 
       .preview-mode .preview-panel {
@@ -1482,14 +1490,83 @@
       }
 
       function convertMarkdownToHtml(markdown) {
-        // Basic Markdown parsing
-        let html = markdown
+        // First, process the markdown line by line to handle nested lists
+        let lines = markdown.split("\n");
+        let inList = false;
+        let listType = null; // 'ul' or 'ol'
+        let listStack = [];
+        let processedLines = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          let line = lines[i];
+          let match = line.match(/^(\s*)([-*+]|\d+\.)\s+(.*)/);
+
+          if (match) {
+            // This is a list item
+            let [, indent, bullet, content] = match;
+            let indentLevel = Math.floor(indent.length / 2);
+            let isOrdered = /^\d+\./.test(bullet);
+            let currentListType = isOrdered ? "ol" : "ul";
+
+            if (!inList) {
+              // Start a new list
+              inList = true;
+              listType = currentListType;
+              listStack = [listType];
+              processedLines.push(`<${listType}>`);
+            }
+
+            // Handle indent level changes
+            while (listStack.length - 1 > indentLevel) {
+              processedLines.push(`</li></${listStack.pop()}>`);
+            }
+
+            while (listStack.length - 1 < indentLevel) {
+              let newListType = currentListType;
+              processedLines[processedLines.length - 1] += `<${newListType}>`;
+              listStack.push(newListType);
+            }
+
+            if (
+              listStack[listStack.length - 1] !== currentListType &&
+              indentLevel > 0
+            ) {
+              processedLines[
+                processedLines.length - 1
+              ] += `<${currentListType}>`;
+              listStack[listStack.length - 1] = currentListType;
+            }
+
+            processedLines.push(`<li>${content}`);
+          } else {
+            // Not a list item
+            if (inList) {
+              // Close all open lists
+              while (listStack.length > 0) {
+                processedLines.push(`</li></${listStack.pop()}>`);
+              }
+              inList = false;
+            }
+            processedLines.push(line);
+          }
+        }
+
+        // Close any remaining open lists
+        if (inList) {
+          while (listStack.length > 0) {
+            processedLines.push(`</li></${listStack.pop()}>`);
+          }
+        }
+
+        let html = processedLines
+          .join("\n")
           // Headers
           .replace(/^# (.*$)/gm, "<h1>$1</h1>")
           .replace(/^## (.*$)/gm, "<h2>$1</h2>")
           .replace(/^### (.*$)/gm, "<h3>$1</h3>")
-          .replace(/^### (.*$)/gm, "<h3>$1</h3>")
-          .replace(/^#### (.*$)/gm, "<h3>$1</h4>")
+          .replace(/^#### (.*$)/gm, "<h4>$1</h4>")
+          .replace(/^##### (.*$)/gm, "<h5>$1</h5>")
+          .replace(/^###### (.*$)/gm, "<h6>$1</h6>")
 
           // Bold and Italic
           .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
@@ -1500,12 +1577,39 @@
           .replace(/```([^`]+)```/g, "<pre><code>$1</code></pre>")
           .replace(/`([^`]+)`/g, "<code>$1</code>")
 
-          // Lists
-          .replace(/^\s*\d+\.\s+(.*$)/gm, "<ol><li>$1</li></ol>")
-          .replace(/^\s*[\-\*]\s+(.*$)/gm, "<ul><li>$1</li></ul>")
+          // Process lists with proper nesting
+          .replace(
+            /@(\d+)@[-*+]\s+(.*?)(?=(\n|$))/g,
+            (match, level, content) => {
+              const indent = "  ".repeat(parseInt(level));
+              return `${indent}<li>${content}</li>`;
+            }
+          )
+          .replace(
+            /@(\d+)@(\d+)\.\s+(.*?)(?=(\n|$))/g,
+            (match, level, num, content) => {
+              const indent = "  ".repeat(parseInt(level));
+              return `${indent}<li>${content}</li>`;
+            }
+          )
 
-          // Links
-          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+          // Wrap lists in proper ul/ol tags
+          .replace(/(<li>.*?<\/li>(\n|$))+/g, (match) => {
+            const isOrdered = /\d+\.\s/.test(match);
+            return `<${isOrdered ? "ol" : "ul"}>${match}</${
+              isOrdered ? "ol" : "ul"
+            }>`;
+          })
+
+          // Links - Handle both markdown links and plain URLs
+          .replace(
+            /\[([^\]]+)\]\(([^)]+)\)/g,
+            '<a href="$2" target="_blank">$1</a>'
+          )
+          .replace(
+            /(?<!["'=])(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g,
+            '<a href="$1" target="_blank">$1</a>'
+          )
 
           // Images
           .replace(/!\[([^\]]+)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">')
@@ -1513,14 +1617,24 @@
           // Blockquotes
           .replace(/^\> (.*$)/gm, "<blockquote>$1</blockquote>")
 
+          // Horizontal rules
+          .replace(/^(-{3,}|\*{3,}|_{3,})$/gm, "<hr>")
+
           // Paragraphs
           .replace(
             /^(?!<[^>]+>)((?:[^<]|<(?!\/?(h[1-6]|ul|ol|li|blockquote|pre|code)>))+)$/gm,
             "<p>$1</p>"
           );
 
-        // Clean up list items
-        html = html.replace(/<\/ul>\s*<ul>/g, "").replace(/<\/ol>\s*<ol>/g, "");
+        // Clean up list nesting
+        html = html
+          .replace(/<\/ul>\s*<ul>/g, "")
+          .replace(/<\/ol>\s*<ol>/g, "")
+          // Fix any remaining list markers
+          .replace(/@\d+@/g, "");
+
+        // Handle task lists
+        html = html.replace(/\[ \]/g, "☐").replace(/\[x\]/g, "☒");
 
         return html;
       }
