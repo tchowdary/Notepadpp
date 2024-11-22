@@ -407,7 +407,7 @@ function convertTimestamp() {
   }
 }
 
-// Add keyboard shortcuts handler
+/* Add keyboard shortcuts handler for Ctrl + W and Escape to clear Text
 document.addEventListener("keydown", (e) => {
   // Ctrl+W to close current tab
   if (e.ctrlKey && e.key === "w") {
@@ -426,7 +426,8 @@ document.addEventListener("keydown", (e) => {
       tab.saveToLocalStorage();
     }
   }
-});
+}); 
+*/
 
 // Add double-click handler for new tab creation
 document
