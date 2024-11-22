@@ -115,9 +115,7 @@ class Tab {
   }
 
   setupTabNameEditing() {
-    const nameSpan = document.querySelector(
-      `.tab-name[data-tab-id="${this.id}"]`
-    );
+    const nameSpan = document.querySelector(`.tab-name[data-tab-id="${this.id}"]`);
     nameSpan.addEventListener("dblclick", (e) => {
       e.stopPropagation();
       const input = document.createElement("input");
@@ -128,7 +126,11 @@ class Tab {
       input.select();
 
       const handleRename = () => {
-        const newName = input.value.trim() || "Untitled";
+        let newName = input.value.trim() || "Untitled";
+        // Add .md extension if not present
+        if (!newName.endsWith('.md')) {
+          newName += '.md';
+        }
         this.name = newName;
         const newSpan = document.createElement("span");
         newSpan.className = "tab-name";

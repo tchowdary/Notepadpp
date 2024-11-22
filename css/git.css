@@ -1,0 +1,129 @@
+.github-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.github-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.github-indicator.disconnected {
+  background-color: #dc3545;
+}
+.github-indicator.connected {
+  background-color: #28a745;
+}
+.github-indicator.syncing {
+  background-color: #ffc107;
+}
+
+.github-settings-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 24px;
+  z-index: 1000;
+  width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.github-settings-modal h2 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+}
+
+.github-settings-modal label {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.github-settings-modal input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  background: var(--toolbar-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: 4px;
+}
+
+.github-settings-modal .buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.github-settings-modal button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--toolbar-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.github-settings-modal button.primary {
+  background: #0366d6;
+  color: white;
+  border: none;
+}
+
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+/* Add GitHub sync button to toolbar */
+.toolbar .github-sync-btn {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.toolbar .github-sync-btn.enabled {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sync-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--toolbar-bg);
+  color: var(--text-color);
+  padding: 12px 20px;
+  border-radius: 4px;
+  display: none;
+  animation: slideIn 0.3s ease-out;
+  border: 1px solid var(--border-color);
+  z-index: 1000;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

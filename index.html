@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/command.css">
+    <link rel="stylesheet" href="css/git.css">
 </head>
 
 <body>
@@ -107,9 +108,35 @@
         </button>
     </div>
 
+
+    <div class="modal-backdrop"></div>
+    <div class="github-settings-modal">
+        <h2>GitHub Settings</h2>
+        <label>
+            Personal Access Token
+            <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+        </label>
+        <label>
+            Repository
+            <input type="text" id="githubRepo" placeholder="username/repository">
+        </label>
+        <label>
+            Branch
+            <input type="text" id="githubBranch" placeholder="main">
+        </label>
+        <div class="buttons">
+            <button onclick="closeGitHubSettings()">Cancel</button>
+            <button class="primary" onclick="saveGitHubSettings()">Save</button>
+        </div>
+    </div>
+
+    <!-- Sync Notification -->
+    <div class="sync-notification"></div>
+
     <script src="scripts/script.js"></script>
     <script src="scripts/tab.js"></script>
     <script src="scripts/command.js"></script>
+    <script src="scripts/git.js"></script>
 
 </body>
 

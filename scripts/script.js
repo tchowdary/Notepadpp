@@ -68,7 +68,7 @@ async function initEditor() {
 }
 
 function createTab(
-  name = "Untitled",
+  name = "Untitled.md",
   content = "",
   id = Date.now().toString()
 ) {
