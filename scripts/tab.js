@@ -487,46 +487,48 @@ class Tab {
   // Add new method for moving lines up/down
   moveLine(direction) {
     const text = this.editor.value;
-    const pos = this.editor.selectionStart;
+    let start = this.editor.selectionStart;
+    let end = this.editor.selectionEnd;
 
-    // Find the current line boundaries
-    const lineStart = text.lastIndexOf('\n', pos - 1) + 1;
-    let lineEnd = text.indexOf('\n', pos);
-    if (lineEnd === -1) lineEnd = text.length;
+    // Find the boundaries of the selected lines
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const selectionStart = text.lastIndexOf('\n', start - 1) + 1;
+    let selectionEnd = text.indexOf('\n', end);
+    if (selectionEnd === -1) selectionEnd = text.length;
 
-    // Get the current line content
-    const currentLine = text.slice(lineStart, lineEnd);
+    // Get the selected lines content
+    const selectedLines = text.slice(selectionStart, selectionEnd);
 
     if (direction < 0 && lineStart > 0) {
       // Moving up: Find the previous line
-      const prevLineStart = text.lastIndexOf('\n', lineStart - 2) + 1;
-      const prevLine = text.slice(prevLineStart, lineStart - 1);
+      const prevLineStart = text.lastIndexOf('\n', selectionStart - 2) + 1;
+      const prevLine = text.slice(prevLineStart, selectionStart - 1);
 
       // Swap lines
       this.editor.value = text.slice(0, prevLineStart) +
-        currentLine + '\n' +
+        selectedLines + '\n' +
         prevLine +
-        text.slice(lineEnd);
+        text.slice(selectionEnd);
 
-      // Move cursor to the same relative position in the moved line
+      // Update selection to moved block
       this.editor.selectionStart = prevLineStart;
-      this.editor.selectionEnd = prevLineStart + currentLine.length;
+      this.editor.selectionEnd = prevLineStart + selectedLines.length;
 
-    } else if (direction > 0 && lineEnd < text.length) {
+    } else if (direction > 0 && selectionEnd < text.length) {
       // Moving down: Find the next line
-      const nextLineEnd = text.indexOf('\n', lineEnd + 1);
-      const nextLine = text.slice(lineEnd + 1, nextLineEnd === -1 ? text.length : nextLineEnd);
+      const nextLineEnd = text.indexOf('\n', selectionEnd + 1);
+      const nextLine = text.slice(selectionEnd + 1, nextLineEnd === -1 ? text.length : nextLineEnd);
 
       // Swap lines
-      this.editor.value = text.slice(0, lineStart) +
+      this.editor.value = text.slice(0, selectionStart) +
         nextLine + '\n' +
-        currentLine +
+        selectedLines +
         text.slice(nextLineEnd === -1 ? text.length : nextLineEnd);
 
-      // Move cursor to the same relative position in the moved line
-      const newLineStart = lineStart + nextLine.length + 1;
+      // Update selection to moved block
+      const newLineStart = selectionStart + nextLine.length + 1;
       this.editor.selectionStart = newLineStart;
-      this.editor.selectionEnd = newLineStart + currentLine.length;
+      this.editor.selectionEnd = newLineStart + selectedLines.length;
     }
 
     this.updateLineNumbers();
