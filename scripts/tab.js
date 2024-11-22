@@ -32,6 +32,12 @@ class Tab {
         this.convertToBulletList();
       }
 
+      // Alt + Arrow Up/Down to move lines
+      if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        e.preventDefault();
+        this.moveLine(e.key === "ArrowUp" ? -1 : 1);
+      }
+
       // Add horizontal line shortcut (Ctrl + -)
       if (e.ctrlKey && e.key === "l") {
         e.preventDefault();
@@ -476,5 +482,54 @@ class Tab {
     // Maintain selection
     this.editor.selectionStart = lineStart;
     this.editor.selectionEnd = lineStart + bulletLines.join('\n').length;
+  }
+
+  // Add new method for moving lines up/down
+  moveLine(direction) {
+    const text = this.editor.value;
+    const pos = this.editor.selectionStart;
+
+    // Find the current line boundaries
+    const lineStart = text.lastIndexOf('\n', pos - 1) + 1;
+    let lineEnd = text.indexOf('\n', pos);
+    if (lineEnd === -1) lineEnd = text.length;
+
+    // Get the current line content
+    const currentLine = text.slice(lineStart, lineEnd);
+
+    if (direction < 0 && lineStart > 0) {
+      // Moving up: Find the previous line
+      const prevLineStart = text.lastIndexOf('\n', lineStart - 2) + 1;
+      const prevLine = text.slice(prevLineStart, lineStart - 1);
+
+      // Swap lines
+      this.editor.value = text.slice(0, prevLineStart) +
+        currentLine + '\n' +
+        prevLine +
+        text.slice(lineEnd);
+
+      // Move cursor to the same relative position in the moved line
+      this.editor.selectionStart = prevLineStart;
+      this.editor.selectionEnd = prevLineStart + currentLine.length;
+
+    } else if (direction > 0 && lineEnd < text.length) {
+      // Moving down: Find the next line
+      const nextLineEnd = text.indexOf('\n', lineEnd + 1);
+      const nextLine = text.slice(lineEnd + 1, nextLineEnd === -1 ? text.length : nextLineEnd);
+
+      // Swap lines
+      this.editor.value = text.slice(0, lineStart) +
+        nextLine + '\n' +
+        currentLine +
+        text.slice(nextLineEnd === -1 ? text.length : nextLineEnd);
+
+      // Move cursor to the same relative position in the moved line
+      const newLineStart = lineStart + nextLine.length + 1;
+      this.editor.selectionStart = newLineStart;
+      this.editor.selectionEnd = newLineStart + currentLine.length;
+    }
+
+    this.updateLineNumbers();
+    this.saveToLocalStorage();
   }
 }
