@@ -26,6 +26,12 @@ class Tab {
         this.handleTabKey(e);
       }
 
+      // Ctrl + Enter for bullet list
+      if (e.ctrlKey && e.key === "/") {
+        e.preventDefault();
+        this.convertToBulletList();
+      }
+
       // Add horizontal line shortcut (Ctrl + -)
       if (e.ctrlKey && e.key === "l") {
         e.preventDefault();
@@ -57,6 +63,7 @@ class Tab {
         updatePreview();
       }
     });
+
 
     // Add copy button to the editor wrapper
     this.addCopyButton();
@@ -426,5 +433,48 @@ class Tab {
 
   saveToLocalStorage() {
     this.saveToIndexedDB().catch(console.error);
+  }
+
+  // Add new method for bullet list conversion
+  convertToBulletList() {
+    const start = this.editor.selectionStart;
+    const end = this.editor.selectionEnd;
+    const text = this.editor.value;
+
+    // Find the start of the first line of selection
+    let lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    if (lineStart === -1) lineStart = 0;
+
+    // Find the end of the last line of selection
+    let lineEnd = text.indexOf('\n', end);
+    if (lineEnd === -1) lineEnd = text.length;
+
+    // Get the selected lines
+    const selectedLines = text.slice(lineStart, lineEnd).split('\n');
+
+    // Convert each line to bullet point
+    const bulletLines = selectedLines.map(line => {
+      // If line already starts with bullet point, leave it as is
+      if (line.trim().startsWith('- ')) {
+        return line;
+      }
+      // If line is empty, don't add bullet point
+      if (line.trim() === '') {
+        return line;
+      }
+      // Add bullet point
+      return `- ${line.trim()}`;
+    });
+
+    // Replace the text
+    this.editor.value = text.slice(0, lineStart) + bulletLines.join('\n') + text.slice(lineEnd);
+
+    // Update editor state
+    this.updateLineNumbers();
+    this.saveToLocalStorage();
+
+    // Maintain selection
+    this.editor.selectionStart = lineStart;
+    this.editor.selectionEnd = lineStart + bulletLines.join('\n').length;
   }
 }
