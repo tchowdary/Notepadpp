@@ -211,24 +211,50 @@ function formatJSON() {
   if (!tab) return;
 
   try {
-    const content = tab.editor.value.trim();
+    // Get the current selection or full content
+    const start = tab.editor.selectionStart;
+    const end = tab.editor.selectionEnd;
+    const hasSelection = start !== end;
+
+    const content = hasSelection
+      ? tab.editor.value.substring(start, end).trim()
+      : tab.editor.value.trim();
+
     if (!content) {
-      showError("Editor is empty");
+      showError("No content to format");
       return;
     }
 
     // Parse and stringify with indentation
     const parsed = JSON.parse(content);
-    const formatted = JSON.stringify(parsed, null, 4);
+    const formatted = JSON.stringify(parsed, null, 2);
 
-    // Update editor content
-    tab.editor.value = formatted;
+    // If we have a selection, only replace the selected text
+    if (hasSelection) {
+      tab.editor.value =
+        tab.editor.value.substring(0, start) +
+        formatted +
+        tab.editor.value.substring(end);
+
+      // Set the selection to the newly formatted text
+      tab.editor.selectionStart = start;
+      tab.editor.selectionEnd = start + formatted.length;
+    } else {
+      // Replace entire content
+      tab.editor.value = formatted;
+    }
+
+    // Update editor state
     tab.updateLineNumbers();
     tab.saveToLocalStorage();
 
-    // Set cursor position to start
-    tab.editor.scrollTop = 0;
-    tab.editor.scrollLeft = 0;
+    // Set cursor position appropriately
+    if (!hasSelection) {
+      tab.editor.scrollTop = 0;
+      tab.editor.scrollLeft = 0;
+    }
+
+    showError("JSON formatted successfully");
   } catch (error) {
     showError("Invalid JSON: " + error.message);
   }
@@ -641,9 +667,7 @@ function convertMarkdownToHtml(markdown) {
 
 // Add to your initialization code
 document.addEventListener('DOMContentLoaded', () => {
-  initEditor().then(() => {
-      initOutlinePanel();
-  });
+  initEditor().catch(console.error);
 });
 
 // // Add focus mode toggle button
@@ -679,8 +703,8 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Add click handler for focus mode button
-focusModeBtn.addEventListener('click', toggleFocusMode);
+// // Add click handler for focus mode button
+// focusModeBtn.addEventListener('click', toggleFocusMode);
 
 // Initialize focus mode on load
 document.addEventListener('DOMContentLoaded', initFocusMode);
