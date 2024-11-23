@@ -1,90 +1,102 @@
 /* Copy button styles - normal mode */
 .copy-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    background-color: var(--tab-bg);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
-    cursor: pointer;
-    border-radius: 6px;
-    width: 40px;
-    height: 40px;
-    transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background-color: var(--tab-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  transition: all 0.2s ease;
+}
+
+.copy-button:hover {
+  background-color: var(--tab-active-bg);
+  transform: translateY(-1px);
+}
+
+.copy-button svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* Copy button styles - focus mode */
+.focus-mode .copy-button {
+  position: fixed;
+  top: 20px;
+  right: 70px;
+  background: var(--toolbar-bg);
+  border: 1px solid var(--border-color);
+  opacity: 0.7;
+  z-index: 1000;
+}
+
+.focus-mode .copy-button:hover {
+  opacity: 1;
+  background-color: var(--tab-active-bg);
+}
+
+/* Exit button styles */
+.focus-mode-exit {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 8px;
+  background-color: var(--toolbar-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  border-radius: 4px;
+  display: none !important; /* Force hide by default */
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  width: 40px;
+  height: 40px;
+}
+
+body.focus-mode .focus-mode-exit {
+  display: flex !important; /* Only show in focus mode */
+}
+
+.focus-mode-exit:hover {
+  opacity: 1;
+  background-color: var(--tab-active-bg);
+  transform: translateY(-1px);
+}
+
+.focus-mode-exit svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* Animation for copy feedback */
+@keyframes copyFeedback {
+  0% {
+    transform: scale(1);
   }
-  
-  .copy-button:hover {
-    background-color: var(--tab-active-bg);
-    transform: translateY(-1px);
+  50% {
+    transform: scale(1.2);
   }
-  
-  .copy-button svg {
-    width: 20px;
-    height: 20px;
-    fill: currentColor;
+  100% {
+    transform: scale(1);
   }
-  
-  /* Copy button styles - focus mode */
-  .focus-mode .copy-button {
-    position: fixed;
-    top: 20px;
-    right: 70px;
-    background: var(--toolbar-bg);
-    border: 1px solid var(--border-color);
-    opacity: 0.7;
-    z-index: 1000;
-  }
-  
-  .focus-mode .copy-button:hover {
-    opacity: 1;
-    background-color: var(--tab-active-bg);
-  }
-  
-  /* Exit button styles */
-  .focus-mode-exit {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    padding: 8px;
-    background-color: var(--toolbar-bg);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
-    cursor: pointer;
-    border-radius: 4px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    opacity: 0.7;
-    width: 40px;
-    height: 40px;
-  }
-  
-  .focus-mode .focus-mode-exit {
-    display: flex;
-  }
-  
-  .focus-mode-exit:hover {
-    opacity: 1;
-    background-color: var(--tab-active-bg);
-    transform: translateY(-1px);
-  }
-  
-  .focus-mode-exit svg {
-    width: 20px;
-    height: 20px;
-    fill: currentColor;
-  }
-  
-  /* Animation for copy feedback */
-  @keyframes copyFeedback {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-  }
-  
-  .copy-feedback {
-    animation: copyFeedback 0.3s ease;
-  }
+}
+
+.copy-feedback {
+  animation: copyFeedback 0.3s ease;
+}
+
+body.focus-mode .toolbar,
+body.focus-mode .tabs-container,
+body.focus-mode .status-bar {
+  display: none !important;
+}
