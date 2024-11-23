@@ -676,10 +676,22 @@ document.addEventListener('DOMContentLoaded', () => {
 // focusModeBtn.innerHTML = 'Exit Focus Mode (Ctrl + M)';
 // document.body.appendChild(focusModeBtn);
 
-// Add focus mode toggle functionality
+// Update the toggleFocusMode function
 function toggleFocusMode() {
+  const wasFocusMode = document.body.classList.contains('focus-mode');
   document.body.classList.toggle('focus-mode');
+
+  // Show/hide focus mode UI elements
+  const exitButtons = document.querySelectorAll('.focus-mode-exit');
+  exitButtons.forEach(button => {
+    button.style.display = wasFocusMode ? 'none' : 'flex';
+  });
+
   updateLocalStorage();
+
+  // if (wasFocusMode) {
+  //   showError('Exited focus mode');
+  // }
 }
 
 // Update focus mode state in localStorage
@@ -695,16 +707,23 @@ function initFocusMode() {
   }
 }
 
-// Add keyboard shortcut handler
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.key.toLowerCase() === 'm') {
-    e.preventDefault();
-    toggleFocusMode();
+document.addEventListener('DOMContentLoaded', () => {
+  // Add click handlers for focus mode buttons
+  const focusModeEnter = document.querySelector('.focus-mode-enter');
+  const focusModeExit = document.querySelector('.focus-mode-exit');
+
+  if (focusModeEnter) {
+    focusModeEnter.addEventListener('click', toggleFocusMode);
   }
+
+  if (focusModeExit) {
+    focusModeExit.addEventListener('click', toggleFocusMode);
+  }
+
+  // Initialize focus mode state
+  initFocusMode();
 });
 
-// // Add click handler for focus mode button
-// focusModeBtn.addEventListener('click', toggleFocusMode);
 
 // Initialize focus mode on load
 document.addEventListener('DOMContentLoaded', initFocusMode);

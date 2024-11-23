@@ -8,6 +8,8 @@ class Tab {
     this.createElements();
     this.setupTabNameEditing(); // Add this line
     this.setupSelectionPopup();
+    this.addCopyButton();
+    this.addFocusModeButtons();
 
     // Add keyboard shortcut handling to the editor
     this.editor.addEventListener("keydown", (e) => {
@@ -38,6 +40,14 @@ class Tab {
         this.moveLine(e.key === "ArrowUp" ? -1 : 1);
       }
 
+      // Escape to exit focus mode
+      if (e.key === "Escape") {
+        if (document.body.classList.contains('focus-mode')) {
+          e.preventDefault();
+          toggleFocusMode();
+        }
+      }
+
       // Add horizontal line shortcut (Ctrl + -)
       if (e.ctrlKey && e.key === "l") {
         e.preventDefault();
@@ -46,6 +56,10 @@ class Tab {
       if (e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
         this.toggleDoneStatus();
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        toggleFocusMode();
       }
     });
 
@@ -70,10 +84,38 @@ class Tab {
       }
     });
 
-
-    // Add copy button to the editor wrapper
-    this.addCopyButton();
   }
+
+  addFocusModeButtons() {
+    // Add exit button
+    const exitButton = document.createElement('button');
+    exitButton.className = 'focus-mode-exit';
+    exitButton.title = 'Exit Focus Mode (Esc)';
+    exitButton.innerHTML = `
+      <svg viewBox="0 0 24 24">
+          <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+      </svg>
+    `;
+    exitButton.addEventListener('click', () => toggleFocusMode());
+
+    // Add enter button to toolbar if it doesn't exist
+    if (!document.querySelector('.focus-mode-enter')) {
+      const enterButton = document.createElement('button');
+      enterButton.className = 'focus-mode-enter';
+      enterButton.title = 'Enter Focus Mode (Ctrl + M)';
+      enterButton.innerHTML = `
+        <svg viewBox="0 0 24 24">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+      `;
+      enterButton.addEventListener('click', () => toggleFocusMode());
+      document.querySelector('.toolbar').appendChild(enterButton);
+    }
+
+    this.editorWrapper.appendChild(exitButton);
+  }
+
+
 
   addCopyButton() {
     const copyButton = document.createElement('button');
