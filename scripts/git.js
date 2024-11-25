@@ -92,10 +92,11 @@ class GitHubIntegration {
     const date = new Date();
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
-    // Add .md extension if not present
-    const mdFilename = filename.endsWith('.md') ? filename : `${filename}.md`;
-    return `${year}/${month}/${mdFilename}`;
-}
+    // Only add .md extension if no extension exists
+    const hasExtension = /\.[^/.]+$/.test(filename);
+    const finalFilename = hasExtension ? filename : `${filename}.md`;
+    return `${year}/${month}/${finalFilename}`;
+  }
 
 
   async uploadFile(path, content) {
