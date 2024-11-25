@@ -183,30 +183,30 @@ function downloadCurrentFile() {
 async function openFile(event) {
   const files = event.target.files;
   if (files.length > 0) {
-      const file = files[0];
-      const reader = new FileReader();
-      
-      reader.onload = async function(e) {
-          const id = Date.now().toString();
-          const tabData = {
-              id: id,
-              name: file.name,
-              content: e.target.result
-          };
-          
-          try {
-              const transaction = db.transaction(["tabs"], "readwrite");
-              const store = transaction.objectStore("tabs");
-              await store.put(tabData);
-              
-              createTab(file.name, e.target.result, id);
-              setActiveTab(id);
-          } catch (error) {
-              console.error("Error saving to IndexedDB:", error);
-          }
+    const file = files[0];
+    const reader = new FileReader();
+
+    reader.onload = async function (e) {
+      const id = Date.now().toString();
+      const tabData = {
+        id: id,
+        name: file.name,
+        content: e.target.result
       };
-      
-      reader.readAsText(file);
+
+      try {
+        const transaction = db.transaction(["tabs"], "readwrite");
+        const store = transaction.objectStore("tabs");
+        await store.put(tabData);
+
+        createTab(file.name, e.target.result, id);
+        setActiveTab(id);
+      } catch (error) {
+        console.error("Error saving to IndexedDB:", error);
+      }
+    };
+
+    reader.readAsText(file);
   }
   event.target.value = '';
 }
@@ -509,7 +509,7 @@ function togglePreview() {
   const isPreviewMode = contentContainer.classList.toggle('preview-mode');
   const previewButtons = document.querySelectorAll('[title*="Preview"], [title*="Edit Mode"]');
   const currentTab = getCurrentTab();
-  
+
   if (!currentTab) return;
 
   // Clear previous preview content
@@ -554,7 +554,7 @@ function updatePreview() {
   if (!currentTab) return;
 
   const previewPanel = document.getElementById('previewPanel');
-  
+
   if (currentTab.name.toLowerCase().endsWith('.md')) {
     const markdownDiv = previewPanel.querySelector('.markdown-preview');
     if (markdownDiv) {
@@ -790,3 +790,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize focus mode on load
 document.addEventListener('DOMContentLoaded', initFocusMode);
+
+// Add this at the document level in script.js:
+document.addEventListener('keydown', (e) => {
+  if (e.key === "Escape") {
+    const contentContainer = document.querySelector(".content-container");
+    if (contentContainer.classList.contains("preview-mode")) {
+      togglePreview();
+    }
+  }
+});
