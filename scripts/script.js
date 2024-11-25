@@ -181,17 +181,23 @@ function downloadCurrentFile() {
 }
 
 function openFile(event) {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const id = createTab(file.name, e.target.result);
-      setActiveTab(id);
-    };
-    reader.readAsText(file);
+  const files = event.target.files;
+  if (files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+          const id = createTab(file.name, e.target.result);
+          setActiveTab(id);
+      };
+      
+      reader.readAsText(file);
   }
-  event.target.value = ""; // Reset file input
+  // Reset the file input
+  event.target.value = '';
 }
+
+
 
 // Theme switching
 function toggleTheme() {

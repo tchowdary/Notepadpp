@@ -606,3 +606,8 @@ body {
 .copy-feedback {
   animation: copyFeedback 0.3s ease;
 }
+
+/* Hide the actual file input */
+#fileInput {
+  display: none;
+}
