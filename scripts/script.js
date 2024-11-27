@@ -580,6 +580,29 @@ function updateMarkdownPreview() {
 }
 
 function convertMarkdownToHtml(markdown) {
+  // Process Mermaid diagrams first
+  markdown = markdown.replace(/```mermaid\n([\s\S]*?)\n```/g, (match, content) => {
+    const id = 'mermaid-' + Math.random().toString(36).substring(2);
+    const cleanContent = content.trim();
+    try {
+      // Create a temporary container for the diagram
+      const tempDiv = document.createElement('div');
+      tempDiv.className = 'mermaid';
+      tempDiv.id = id;
+      tempDiv.textContent = cleanContent;
+      
+      // Queue the rendering for after the element is in the DOM
+      setTimeout(() => {
+        mermaid.init(undefined, `#${id}`);
+      }, 0);
+      
+      return tempDiv.outerHTML;
+    } catch (error) {
+      console.error('Mermaid rendering error:', error);
+      return `<pre class="mermaid-error">Error rendering diagram: ${error.message}</pre>`;
+    }
+  });
+
   // First, process the markdown line by line to handle nested lists
   let lines = markdown.split("\n");
   let inList = false;

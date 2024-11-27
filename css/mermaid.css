@@ -1,0 +1,89 @@
+/* Mermaid diagram styles */
+.mermaid {
+  text-align: center;
+  margin: 1.5em 0;
+  padding: 2em;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 16px;
+  line-height: 1.5;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+}
+
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Improve text readability in diagrams */
+.mermaid .label {
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .mermaid {
+  background-color: #f5f5f5;
+}
+
+[data-theme="light"] .mermaid .label {
+  color: #333333 !important;
+  background-color: #f5f5f5 !important;
+}
+
+[data-theme="light"] .mermaid .node rect,
+[data-theme="light"] .mermaid .node circle,
+[data-theme="light"] .mermaid .node ellipse,
+[data-theme="light"] .mermaid .node polygon {
+  fill: #ffffff !important;
+  stroke: #666666 !important;
+}
+
+[data-theme="light"] .mermaid .edgePath .path {
+  stroke: #666666 !important;
+}
+
+[data-theme="light"] .mermaid .edgeLabel {
+  background-color: #f5f5f5 !important;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .mermaid {
+  background-color: var(--toolbar-bg);
+}
+
+[data-theme="dark"] .mermaid .label {
+  color: #ffffff !important;
+  background-color: #2d2d2d !important;
+}
+
+/* Node styles */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon,
+.mermaid .node path {
+  stroke-width: 2px !important;
+}
+
+/* Edge/arrow styles */
+.mermaid .edgePath .path {
+  stroke-width: 2px !important;
+}
+
+.mermaid .arrowheadPath {
+  stroke-width: 2px !important;
+}
+
+.mermaid-error {
+  color: #ff6b6b;
+  background-color: var(--toolbar-bg);
+  padding: 1em;
+  border-radius: 5px;
+  margin: 1em 0;
+  white-space: pre-wrap;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+}
