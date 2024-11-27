@@ -27,7 +27,36 @@ async function initDB() {
   });
 }
 
+// Mobile detection utility
+function isMobile() {
+  return window.matchMedia('(max-width: 768px)').matches || 
+         ('ontouchstart' in window) ||
+         (navigator.maxTouchPoints > 0);
+}
 
+// Initialize mobile-specific features
+function initMobileFeatures() {
+  if (isMobile()) {
+    // Enable word wrap by default on mobile
+    document.querySelector('.editor').classList.add('word-wrap');
+    
+    // Add touch event handlers for better mobile scrolling
+    const editor = document.querySelector('.editor');
+    let touchStartY = 0;
+    
+    editor.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    editor.addEventListener('touchmove', (e) => {
+      const touchY = e.touches[0].clientY;
+      const deltaY = touchStartY - touchY;
+      
+      editor.scrollTop += deltaY;
+      touchStartY = touchY;
+    }, { passive: true });
+  }
+}
 
 async function initEditor() {
   try {
@@ -210,7 +239,6 @@ async function openFile(event) {
   }
   event.target.value = '';
 }
-
 
 // Theme switching
 function toggleTheme() {
@@ -452,27 +480,27 @@ function convertTimestamp() {
   }
 }
 
-/* Add keyboard shortcuts handler for Ctrl + W and Escape to clear Text
+// Update keyboard shortcuts for mobile
 document.addEventListener("keydown", (e) => {
-  // Ctrl+W to close current tab
-  if (e.ctrlKey && e.key === "w") {
-    e.preventDefault();
-    if (activeTabId) {
-      closeTab(activeTabId, new Event("dummy"));
+  // Only apply Ctrl shortcuts on desktop
+  if (!isMobile()) {
+    if (e.ctrlKey && e.key === "w") {
+      e.preventDefault();
+      const currentTab = getCurrentTab();
+      if (currentTab) {
+        closeTab(currentTab.id);
+      }
     }
   }
-
-  // Escape to clear editor content
+  
+  // Handle Escape key for both mobile and desktop
   if (e.key === "Escape") {
-    const tab = getCurrentTab();
-    if (tab) {
-      tab.editor.value = "";
-      tab.updateLineNumbers();
-      tab.saveToLocalStorage();
+    const selectionPopup = document.getElementById("selectionPopup");
+    if (selectionPopup.style.display === "block") {
+      selectionPopup.style.display = "none";
     }
   }
-}); 
-*/
+});
 
 // Add double-click handler for new tab creation
 document
@@ -764,9 +792,19 @@ function convertMarkdownToHtml(markdown) {
 // Add to your initialization code
 document.addEventListener('DOMContentLoaded', () => {
   initEditor().catch(console.error);
+  initMobileFeatures();
+  
+  // Add viewport height fix for mobile browsers
+  function setVH() {
+    let vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }
+  
+  setVH();
+  window.addEventListener('resize', setVH);
 });
 
-// // Add focus mode toggle button
+// Add focus mode toggle button
 // const focusModeBtn = document.createElement('button');
 // focusModeBtn.className = 'focus-mode-btn';
 // focusModeBtn.innerHTML = 'Exit Focus Mode (Ctrl + M)';
@@ -819,7 +857,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize focus mode state
   initFocusMode();
 });
-
 
 // Initialize focus mode on load
 document.addEventListener('DOMContentLoaded', initFocusMode);

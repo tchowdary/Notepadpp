@@ -135,6 +135,43 @@
   height: 40px;
 }
 
+/* Mobile styles for focus mode buttons */
+@media screen and (max-width: 768px) {
+  .focus-mode .copy-button,
+  .focus-mode-exit {
+    width: 44px;
+    height: 44px;
+    top: auto;
+    bottom: 20px;
+    opacity: 0.9;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .focus-mode .copy-button {
+    right: 74px;
+  }
+
+  .focus-mode-exit {
+    right: 20px;
+  }
+
+  .focus-mode .copy-button:hover,
+  .focus-mode-exit:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+
+  .focus-mode .main-container {
+    padding-top: 20px;
+    padding: 1rem;
+  }
+
+  .focus-mode .editor {
+    padding: 0 16px;
+    font-size: 16px !important;
+  }
+}
+
 body.focus-mode .focus-mode-exit {
   display: flex !important; /* Only show in focus mode */
 }
