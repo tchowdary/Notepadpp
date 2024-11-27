@@ -1,7 +1,7 @@
 let tabs = [];
 let activeTabId = null;
 let currentTheme = "dark";
-let jsonEditor = null;
+let jsonEditors = new Map();
 let isJsonEditorMode = false;
 
 // Add this at the start of your JavaScript code
@@ -164,7 +164,17 @@ async function closeTab(id, event) {
   const store = transaction.objectStore("tabs");
   await store.delete(id);
 
-  // Rest of the closeTab function remains the same
+  // Clean up JSON editor if it exists
+  const jsonEditor = jsonEditors.get(id);
+  if (jsonEditor) {
+    jsonEditor.destroy();
+    jsonEditors.delete(id);
+    const container = document.getElementById('jsoneditor-' + id);
+    if (container) {
+      container.remove();
+    }
+  }
+
   const tab = tabs[tabIndex];
   tab.button.remove();
   tab.tab.editorWrapper.remove();
@@ -252,6 +262,13 @@ function setTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   currentTheme = theme;
   localStorage.setItem("theme", theme);
+  
+  // Update theme for all JSON editors
+  for (let [tabId, jsonEditor] of jsonEditors) {
+    if (jsonEditor) {
+      jsonEditor.setTheme(theme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/chrome');
+    }
+  }
 }
 
 // Add new function for JSON formatting
@@ -260,63 +277,37 @@ function formatJSON() {
   if (!tab) return;
 
   try {
-    // Check if JSONEditor is available
-    if (typeof JSONEditor === 'undefined') {
-      showError("JSON Editor library not loaded. Please refresh the page.");
-      return;
-    }
-
-    // Get the current selection or full content
-    const start = tab.editor.selectionStart;
-    const end = tab.editor.selectionEnd;
-    const hasSelection = start !== end;
-
-    let content = hasSelection
-      ? tab.editor.value.substring(start, end)
-      : tab.editor.value;
-
-    // Remove BOM and normalize whitespace
-    content = content.replace(/^\uFEFF/, '');
-    // Trim whitespace but preserve newlines within the content
-    content = content.replace(/^\s+|\s+$/g, '');
-
+    // Parse the current content as JSON
+    let content = tab.editor.value.trim();
     if (!content) {
       showError("No content to format");
       return;
     }
 
-    // Try to parse the JSON, handling common issues
     let parsed;
     try {
       parsed = JSON.parse(content);
     } catch (parseError) {
-      // Try to handle escaped quotes
-      if (content.includes('\\"')) {
-        content = content.replace(/\\"/g, '"');
-        try {
-          parsed = JSON.parse(content);
-        } catch (e) {
-          throw parseError; // If it still fails, throw the original error
-        }
-      } else {
-        throw parseError;
-      }
+      console.error('JSON parse error:', parseError);
+      showError("Invalid JSON: " + parseError.message);
+      return;
     }
 
-    // If we don't have a JSON editor yet, create one
-    if (!jsonEditor) {
-      // Hide the regular editor
-      tab.editor.style.display = 'none';
-      
-      // Create a container for the JSON editor if it doesn't exist
-      let container = document.getElementById('jsoneditor');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'jsoneditor';
-        container.style.height = '100%';
-        tab.editor.parentNode.insertBefore(container, tab.editor);
-      }
+    // Get or create container for this tab
+    let container = document.getElementById('jsoneditor-' + tab.id);
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'jsoneditor-' + tab.id;
+      container.style.width = '100%';
+      container.style.height = '100%';
+      container.style.display = 'none';
+      // Insert the container in the editor wrapper instead of body
+      tab.editor.parentNode.appendChild(container);
+    }
 
+    // Get or create JSON editor for this tab
+    let jsonEditor = jsonEditors.get(tab.id);
+    if (!jsonEditor) {
       try {
         // Create the editor with improved options
         const options = {
@@ -337,6 +328,7 @@ function formatJSON() {
         };
 
         jsonEditor = new JSONEditor(container, options);
+        jsonEditors.set(tab.id, jsonEditor);
       } catch (editorError) {
         console.error('Error creating JSON editor:', editorError);
         showError("Error initializing JSON editor. Please check console for details.");
@@ -348,8 +340,12 @@ function formatJSON() {
     jsonEditor.set(parsed);
     jsonEditor.expandAll();
     
+    // Show JSON editor container and hide original editor
+    container.style.display = 'block';
+    tab.editor.style.display = 'none';
+    
     // Update flags
-    isJsonEditorMode = true;
+    tab.isJsonEditorMode = true;
     
     // Save the formatted content to the original editor
     tab.editor.value = JSON.stringify(parsed, null, 2);
@@ -357,39 +353,46 @@ function formatJSON() {
 
     showError("JSON formatted successfully");
   } catch (error) {
-    console.error('JSON Error:', error);
-    showError("Invalid JSON: " + error.message + (error.at ? ". Position: " + error.at : ""));
+    console.error('JSON formatting error:', error);
+    showError("Error formatting JSON: " + error.message);
   }
 }
 
-// Add new function to toggle between regular and JSON editor
-function toggleJsonEditor() {
-  const tab = getCurrentTab();
-  if (!tab || !jsonEditor) return;
-
-  if (isJsonEditorMode) {
-    // Switch to regular editor
-    document.getElementById('jsoneditor').style.display = 'none';
-    tab.editor.style.display = 'block';
-    isJsonEditorMode = false;
-  } else {
-    // Switch to JSON editor
-    document.getElementById('jsoneditor').style.display = 'block';
-    tab.editor.style.display = 'none';
-    isJsonEditorMode = true;
+// Update switchTab to handle JSON editor visibility
+function switchTab(tabId) {
+  if (activeTabId) {
+    const currentTab = tabs.find((t) => t.id === activeTabId);
+    if (currentTab) {
+      currentTab.tab.classList.remove("active");
+      currentTab.editor.style.display = "none";
+      
+      // Hide JSON editor if it exists for current tab
+      const currentJsonContainer = document.getElementById('jsoneditor-' + currentTab.id);
+      if (currentJsonContainer) {
+        currentJsonContainer.style.display = 'none';
+      }
+    }
   }
-}
 
-// Add error message handling
-function showError(message) {
-  const errorElement = document.getElementById("errorMessage");
-  errorElement.textContent = message;
-  errorElement.style.display = "block";
-
-  // Hide after 3 seconds
-  setTimeout(() => {
-    errorElement.style.display = "none";
-  }, 3000);
+  const newTab = tabs.find((t) => t.id === tabId);
+  if (newTab) {
+    newTab.tab.classList.add("active");
+    
+    // Show appropriate editor based on mode
+    if (newTab.isJsonEditorMode) {
+      const jsonContainer = document.getElementById('jsoneditor-' + newTab.id);
+      if (jsonContainer) {
+        jsonContainer.style.display = 'block';
+        newTab.editor.style.display = 'none';
+      } else {
+        newTab.editor.style.display = "block";
+      }
+    } else {
+      newTab.editor.style.display = "block";
+    }
+    
+    newTab.editor.focus();
+  }
 }
 
 // API Key management

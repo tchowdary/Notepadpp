@@ -13,6 +13,20 @@ div.jsoneditor {
     background-color: var(--bg-color);
     color: var(--text-color);
     font-family: "JetBrains Mono", monospace;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+[id^="jsoneditor-"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
 }
 
 /* Menu bar styling */
@@ -35,16 +49,8 @@ div.jsoneditor-tree {
 }
 
 /* Field and value colors in tree mode - Dark Theme */
-[data-theme="dark"] div.jsoneditor-tree div.jsoneditor-tree-inner {
-    background-color: var(--bg-color);
-}
-
 [data-theme="dark"] div.jsoneditor-tree .jsoneditor-field {
     color: #9CDCFE;
-}
-
-[data-theme="dark"] div.jsoneditor-tree .jsoneditor-value {
-    color: var(--text-color);
 }
 
 [data-theme="dark"] div.jsoneditor-tree .jsoneditor-value.jsoneditor-string {
@@ -64,10 +70,6 @@ div.jsoneditor-tree {
 }
 
 /* Field and value colors in tree mode - Light Theme */
-[data-theme="light"] div.jsoneditor-tree div.jsoneditor-tree-inner {
-    background-color: var(--bg-color);
-}
-
 [data-theme="light"] div.jsoneditor-tree .jsoneditor-field {
     color: #0451A5;
 }
@@ -143,7 +145,6 @@ div.jsoneditor-contextmenu {
     border: 1px solid var(--border-color);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     font-family: "JetBrains Mono", monospace;
-    color: var(--text-color);
 }
 
 div.jsoneditor-contextmenu ul li button {
@@ -155,31 +156,6 @@ div.jsoneditor-contextmenu ul li button {
 div.jsoneditor-contextmenu ul li button:hover,
 div.jsoneditor-contextmenu ul li button:focus {
     background-color: var(--tab-bg);
-}
-
-/* Tree mode specific styling */
-[data-theme="dark"] div.jsoneditor-tree button.jsoneditor-button {
-    filter: invert(70%);
-}
-
-[data-theme="dark"] div.jsoneditor-tree button.jsoneditor-button:hover {
-    background-color: var(--tab-bg);
-}
-
-[data-theme="dark"] div.jsoneditor-tree button.jsoneditor-expanded {
-    filter: invert(70%);
-}
-
-[data-theme="dark"] div.jsoneditor-tree button.jsoneditor-collapsed {
-    filter: invert(70%);
-}
-
-[data-theme="dark"] div.jsoneditor-tree div.jsoneditor-readonly {
-    color: var(--text-color);
-}
-
-[data-theme="dark"] div.jsoneditor-tree div.jsoneditor-separator {
-    color: var(--text-color);
 }
 
 /* Adjust icons color */
