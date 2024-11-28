@@ -6,32 +6,49 @@
 }
 
 .focus-mode .main-container {
-  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
   padding: 2rem;
   background: var(--bg-color);
   padding-top: 150px;
-  /* Increased top padding */
-}
-
-/* Add new focus mode styles */
-.focus-mode .editor {
-  /*font-family: "Rubik", serif; */
-  transition: all 0.3s ease;
-  padding: 2rem;
-  line-height: 1.8;
-  background: transparent;
-  border: none;
-  font-size: 18px !important;
-  letter-spacing: -0.011em;
+  min-height: 100vh;
+  width: 100%;
 }
 
 .focus-mode .content-container {
   max-width: 1100px;
   margin: 0 auto;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .focus-mode .editor-container {
   border: none;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.focus-mode .editor {
+  flex: 1;
+  width: 100%;
+  min-height: 200px;
+  padding: 2rem;
+  line-height: 1.8;
+  background: var(--bg-color);
+  border: none;
+  font-size: 18px !important;
+  letter-spacing: -0.011em;
+  position: relative;
+  z-index: 1;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .focus-mode .line-numbers {
@@ -136,7 +153,18 @@
 }
 
 /* Mobile styles for focus mode buttons */
-@media screen and (max-width: 768px) {
+@media (max-width: 768px) {
+  .focus-mode .main-container {
+    padding: 1rem;
+    padding-top: 20px;
+  }
+
+  .focus-mode .editor {
+    padding: 1rem;
+    font-size: 16px !important;
+    min-height: 150px;
+  }
+
   .focus-mode .copy-button,
   .focus-mode-exit {
     width: 44px;
@@ -159,16 +187,6 @@
   .focus-mode-exit:hover {
     opacity: 1;
     transform: translateY(-2px);
-  }
-
-  .focus-mode .main-container {
-    padding-top: 20px;
-    padding: 1rem;
-  }
-
-  .focus-mode .editor {
-    padding: 0 16px;
-    font-size: 16px !important;
   }
 }
 

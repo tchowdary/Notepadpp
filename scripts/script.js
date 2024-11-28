@@ -903,11 +903,19 @@ function toggleFocusMode() {
     button.style.display = wasFocusMode ? 'none' : 'flex';
   });
 
-  updateLocalStorage();
+  // Ensure editor is visible and focused
+  const currentTab = getCurrentTab();
+  if (currentTab) {
+    currentTab.editor.style.display = 'block';
+    if (!wasFocusMode) {
+      // When entering focus mode, focus the editor
+      setTimeout(() => {
+        currentTab.editor.focus();
+      }, 100);
+    }
+  }
 
-  // if (wasFocusMode) {
-  //   showError('Exited focus mode');
-  // }
+  updateLocalStorage();
 }
 
 // Update focus mode state in localStorage
