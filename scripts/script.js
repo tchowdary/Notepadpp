@@ -558,6 +558,41 @@ function convertTimestamp() {
 
 // Update keyboard shortcuts for mobile
 document.addEventListener("keydown", (e) => {
+  // Handle list continuation
+  if (e.key === "Enter") {
+    const editor = document.querySelector(".editor");
+    if (editor && document.activeElement === editor) {
+      const cursorPos = editor.selectionStart;
+      const content = editor.value;
+      const lines = content.split('\n');
+      let currentLineStart = content.lastIndexOf('\n', cursorPos - 1) + 1;
+      let currentLine = content.substring(currentLineStart, cursorPos);
+
+      // Check for bullet points
+      const bulletMatch = currentLine.match(/^(\s*)[-*+]\s+/);
+      if (bulletMatch) {
+        e.preventDefault();
+        const [fullMatch, spaces] = bulletMatch;
+        const textAfterCursor = content.substring(cursorPos);
+        editor.value = content.substring(0, cursorPos) + '\n' + spaces + '- ' + textAfterCursor;
+        editor.selectionStart = editor.selectionEnd = cursorPos + fullMatch.length + 1;
+        return;
+      }
+
+      // Check for numbered lists
+      const numberedMatch = currentLine.match(/^(\s*)(\d+)\.\s+/);
+      if (numberedMatch) {
+        e.preventDefault();
+        const [fullMatch, spaces, number] = numberedMatch;
+        const nextNumber = parseInt(number) + 1;
+        const textAfterCursor = content.substring(cursorPos);
+        editor.value = content.substring(0, cursorPos) + '\n' + spaces + nextNumber + '. ' + textAfterCursor;
+        editor.selectionStart = editor.selectionEnd = cursorPos + spaces.length + nextNumber.toString().length + 3;
+        return;
+      }
+    }
+  }
+
   // Only apply Ctrl shortcuts on desktop
   if (!isMobile()) {
     if (e.ctrlKey && e.key === "w") {

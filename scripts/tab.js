@@ -6,23 +6,12 @@ class Tab {
     this.content = content;
     this.wordWrap = localStorage.getItem("wordWrap") === "true";
     this.createElements();
-    this.setupTabNameEditing(); // Add this line
+    this.setupTabNameEditing(); 
     this.setupSelectionPopup();
     this.addCopyButton();
     this.addFocusModeButtons();
 
     // Add keyboard shortcut handling to the editor
-    this.editor.addEventListener("keydown", (e) => {
-      if (e.key === "Tab") {
-        this.handleTabKey(e);
-      }
-    });
-
-    // Apply word wrap setting
-    if (this.wordWrap) {
-      this.editor.classList.add("word-wrap");
-    }
-
     this.editor.addEventListener("keydown", (e) => {
       if (e.key === "Tab") {
         this.handleTabKey(e);
@@ -84,6 +73,108 @@ class Tab {
       }
     });
 
+    // Add list continuation and indentation handler
+    this.editor.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const cursorPos = this.editor.selectionStart;
+        const content = this.editor.value;
+        let currentLineStart = content.lastIndexOf('\n', cursorPos - 1) + 1;
+        let currentLine = content.substring(currentLineStart, cursorPos);
+        
+        // Check for bullet points
+        const bulletMatch = currentLine.match(/^(\s*)[-*+]\s+/);
+        if (bulletMatch) {
+          e.preventDefault();
+          const [fullMatch, spaces] = bulletMatch;
+          const marker = currentLine[spaces.length]; // Get the actual marker used (-, *, or +)
+          const textAfterCursor = content.substring(cursorPos);
+          this.editor.value = content.substring(0, cursorPos) + '\n' + spaces + marker + ' ' + textAfterCursor;
+          this.editor.selectionStart = this.editor.selectionEnd = cursorPos + spaces.length + 3;
+          this.updateLineNumbers();
+          this.saveToLocalStorage();
+          return;
+        }
+
+        // Check for numbered lists with sub-numbering (e.g., 1a, 1b, 2a)
+        const numberedMatch = currentLine.match(/^(\s*)(\d+)([a-z]?)[\.\)]\s+/);
+        if (numberedMatch) {
+          e.preventDefault();
+          const [fullMatch, spaces, number, subLetter] = numberedMatch;
+          let nextMarker;
+          
+          // If there's a sub-letter, increment it
+          if (subLetter) {
+            nextMarker = number + String.fromCharCode(subLetter.charCodeAt(0) + 1);
+          } else {
+            // If no sub-letter and line is indented, start sub-numbering with 'a'
+            if (spaces.length > 0) {
+              nextMarker = number + 'a';
+            } else {
+              // Otherwise increment the number
+              nextMarker = (parseInt(number) + 1).toString();
+            }
+          }
+          
+          const textAfterCursor = content.substring(cursorPos);
+          this.editor.value = content.substring(0, cursorPos) + '\n' + spaces + nextMarker + '. ' + textAfterCursor;
+          this.editor.selectionStart = this.editor.selectionEnd = cursorPos + spaces.length + nextMarker.toString().length + 3;
+          this.updateLineNumbers();
+          this.saveToLocalStorage();
+          return;
+        }
+      }
+      
+      // Handle Tab key for list indentation
+      if (e.key === "Tab" && !e.shiftKey) {
+        const cursorPos = this.editor.selectionStart;
+        const content = this.editor.value;
+        const currentLineStart = content.lastIndexOf('\n', cursorPos - 1) + 1;
+        const currentLine = content.substring(currentLineStart, cursorPos);
+        
+        // Check if we're on a list item
+        const listMatch = currentLine.match(/^(\s*)(?:[-*+]|\d+(?:[a-z]?)[\.\)])\s+/);
+        if (listMatch) {
+          e.preventDefault();
+          const [fullMatch, spaces] = listMatch;
+          
+          // If it's a numbered list without sub-letter, convert to sub-numbering
+          const numberedMatch = currentLine.match(/^(\s*)(\d+)[\.\)]\s+(.*)$/);
+          if (numberedMatch) {
+            const [, , number, text] = numberedMatch;
+            // Replace current line's indentation with 2 spaces
+            const newLine = '  ' + number + 'a. ' + text;
+            this.editor.value = content.substring(0, currentLineStart) + newLine + content.substring(currentLineStart + currentLine.length);
+            this.editor.selectionStart = this.editor.selectionEnd = currentLineStart + newLine.length;
+          } else {
+            // For bullet points and other cases, replace current indentation with 2 more spaces
+            const bulletMatch = currentLine.match(/^(\s*)([-*+])\s+(.*)$/);
+            if (bulletMatch) {
+              const [, , marker, text] = bulletMatch;
+              const newIndent = '  ';
+              const newLine = newIndent + marker + ' ' + text;
+              this.editor.value = content.substring(0, currentLineStart) + newLine + content.substring(currentLineStart + currentLine.length);
+              this.editor.selectionStart = this.editor.selectionEnd = currentLineStart + newLine.length;
+            }
+          }
+          this.updateLineNumbers();
+          this.saveToLocalStorage();
+          return;
+        }
+      }
+    });
+
+    // Add preview update to input event
+    this.editor.addEventListener("input", () => {
+      this.updateLineNumbers();
+      this.saveToLocalStorage();
+      if (
+        document
+          .querySelector(".content-container")
+          .classList.contains("preview-mode")
+      ) {
+        updatePreview();
+      }
+    });
   }
 
   addFocusModeButtons() {
@@ -109,9 +200,7 @@ class Tab {
     }
 
     this.editorWrapper.appendChild(exitButton);
-}
-
-
+  }
 
   addCopyButton() {
     const copyButton = document.createElement('button');
