@@ -489,6 +489,35 @@ body {
   background-color: var(--toolbar-bg);
 }
 
+/* Markdown Table Styles */
+.markdown-table {
+  border-collapse: collapse;
+  margin: 15px 0;
+  width: 100%;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.markdown-table th,
+.markdown-table td {
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.markdown-table th {
+  background-color: var(--toolbar-bg);
+  font-weight: bold;
+}
+
+.markdown-table tr:nth-child(even) {
+  background-color: var(--tab-bg);
+}
+
+.markdown-table tr:hover {
+  background-color: var(--tab-active-bg);
+}
+
 /* Hide API key button when key is set */
 #apiKeyButton {
   display: none;

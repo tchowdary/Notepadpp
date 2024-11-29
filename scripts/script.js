@@ -819,8 +819,88 @@ function convertMarkdownToHtml(markdown) {
     }
   }
 
-  let html = processedLines
-    .join("\n")
+  // Process tables
+  let inTable = false;
+  let tableRows = [];
+  let processedLines2 = [];
+
+  for (let line of processedLines) {
+    if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+      if (!inTable) {
+        inTable = true;
+      }
+      tableRows.push(line);
+    } else {
+      if (inTable) {
+        // Process the collected table
+        if (tableRows.length >= 2) {
+          let table = '<table class="markdown-table">\n';
+          
+          // Process header
+          let headerCells = tableRows[0].split('|').slice(1, -1);
+          table += '<thead>\n<tr>\n';
+          headerCells.forEach(cell => {
+            table += `<th>${cell.trim()}</th>\n`;
+          });
+          table += '</tr>\n</thead>\n';
+          
+          // Process body
+          if (tableRows.length > 2) {
+            table += '<tbody>\n';
+            for (let i = 2; i < tableRows.length; i++) {
+              let cells = tableRows[i].split('|').slice(1, -1);
+              table += '<tr>\n';
+              cells.forEach(cell => {
+                table += `<td>${cell.trim()}</td>\n`;
+              });
+              table += '</tr>\n';
+            }
+            table += '</tbody>\n';
+          }
+          
+          table += '</table>';
+          processedLines2.push(table);
+        }
+        
+        inTable = false;
+        tableRows = [];
+      }
+      processedLines2.push(line);
+    }
+  }
+
+  // Handle case where file ends with a table
+  if (inTable && tableRows.length >= 2) {
+    let table = '<table class="markdown-table">\n';
+    
+    // Process header
+    let headerCells = tableRows[0].split('|').slice(1, -1);
+    table += '<thead>\n<tr>\n';
+    headerCells.forEach(cell => {
+      table += `<th>${cell.trim()}</th>\n`;
+    });
+    table += '</tr>\n</thead>\n';
+    
+    // Process body
+    if (tableRows.length > 2) {
+      table += '<tbody>\n';
+      for (let i = 2; i < tableRows.length; i++) {
+        let cells = tableRows[i].split('|').slice(1, -1);
+        table += '<tr>\n';
+        cells.forEach(cell => {
+          table += `<td>${cell.trim()}</td>\n`;
+        });
+        table += '</tr>\n';
+      }
+      table += '</tbody>\n';
+    }
+    
+    table += '</table>';
+    processedLines2.push(table);
+  }
+
+  let html = processedLines2
+    .join('\n')
     // Headers
     .replace(/^# (.*$)/gm, "<h1>$1</h1>")
     .replace(/^## (.*$)/gm, "<h2>$1</h2>")
