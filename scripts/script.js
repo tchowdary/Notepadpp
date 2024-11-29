@@ -613,6 +613,20 @@ function toggleWordWrap() {
   showError(newWordWrap ? "Word wrap enabled" : "Word wrap disabled");
 }
 
+function updateMarkdownPreview() {
+  const currentTab = getCurrentTab();
+  if (!currentTab) return;
+
+  const previewPanel = document.getElementById('previewPanel');
+  const markdownDiv = previewPanel.querySelector('.markdown-preview');
+  if (markdownDiv) {
+    // Convert markdown to HTML and update the preview
+    markdownDiv.innerHTML = '';  // Clear existing content
+    const html = convertMarkdownToHtml(currentTab.editor.value);
+    markdownDiv.innerHTML = html;
+  }
+}
+
 function togglePreview() {
   const contentContainer = document.querySelector('.content-container');
   const previewPanel = document.getElementById('previewPanel');
@@ -626,11 +640,6 @@ function togglePreview() {
   previewPanel.innerHTML = '';
 
   if (isPreviewMode) {
-    // Enable focus mode when entering preview mode
-    if (!document.body.classList.contains('focus-mode')) {
-      toggleFocusMode();
-    }
-    
     if (currentTab.name.toLowerCase().endsWith('.md')) {
       // Create div for markdown preview
       const markdownDiv = document.createElement('div');
@@ -651,11 +660,6 @@ function togglePreview() {
       button.title = 'Edit Mode';
     });
   } else {
-    // Disable focus mode when exiting preview mode
-    if (document.body.classList.contains('focus-mode')) {
-      toggleFocusMode();
-    }
-    
     previewButtons.forEach(button => {
       button.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>`;
       button.title = 'Toggle Preview';
@@ -685,17 +689,6 @@ function updatePreview() {
     if (iframe) {
       iframe.srcdoc = currentTab.editor.value;
     }
-  }
-}
-
-function updateMarkdownPreview() {
-  const currentTab = getCurrentTab();
-  if (!currentTab) return;
-
-  const previewPanel = document.getElementById('previewPanel');
-  const markdownDiv = previewPanel.querySelector('.markdown-preview');
-  if (markdownDiv) {
-    markdownDiv.innerHTML = convertMarkdownToHtml(currentTab.editor.value);
   }
 }
 

@@ -393,15 +393,19 @@ body {
 .preview-panel {
   display: none;
   flex: 1;
-  /* Added */
   padding: 20px 40px;
   overflow-y: auto;
   min-height: 0;
-  /* Added for Firefox */
 }
 
 .preview-mode .preview-panel {
   display: block;
+}
+
+.markdown-preview {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
 }
 
 /* Markdown preview styles */
