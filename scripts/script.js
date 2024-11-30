@@ -1088,3 +1088,23 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+// Function to check if app is running in PWA mode
+function isPWA() {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         window.navigator.standalone || 
+         document.referrer.includes('android-app://');
+}
+
+// Initialize focus mode on load
+document.addEventListener('DOMContentLoaded', () => {
+  initFocusMode();
+  
+  // Enable focus mode by default for PWA
+  if (isPWA()) {
+    const focusMode = localStorage.getItem('focusMode');
+    if (focusMode === null) {
+      toggleFocusMode();
+    }
+  }
+});
