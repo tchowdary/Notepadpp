@@ -11,6 +11,11 @@ let db;
 
 // Initialize IndexedDB
 async function initDB() {
+  // Set word wrap enabled by default if not already set
+  if (localStorage.getItem("wordWrap") === null) {
+    localStorage.setItem("wordWrap", "true");
+  }
+  
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(dbName, dbVersion);
 

@@ -424,6 +424,11 @@ class Tab {
     this.editor.className = "editor";
     this.editor.value = this.content;
     this.editor.spellcheck = false;
+    
+    // Apply word wrap setting
+    if (this.wordWrap) {
+      this.editor.classList.add("word-wrap");
+    }
 
     // Add event listeners
     this.editor.addEventListener("input", () => {
