@@ -169,8 +169,7 @@
   .focus-mode-exit {
     width: 44px;
     height: 44px;
-    top: auto;
-    bottom: 20px;
+    top: 20px;
     opacity: 0.9;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
