@@ -67,25 +67,74 @@
   transition: all 0.3s ease;
 }
 
-/* Focus mode toggle button */
-.focus-mode-btn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  background: var(--toolbar-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
+/* Focus mode button styles */
+.focus-mode-only {
+  display: none;
 }
 
-.focus-mode .focus-mode-btn,
-.focus-mode-btn:hover {
+.focus-mode .focus-mode-only {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background-color: var(--tab-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  border-radius: 6px;
+  margin: 4px;
+}
+
+/* Focus controls container */
+.focus-controls {
+  position: fixed;
+  top: env(safe-area-inset-top, 20px);
+  right: env(safe-area-inset-right, 20px);
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--toolbar-bg);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.focus-mode .focus-controls {
   opacity: 1;
+}
+
+/* Ensure buttons are properly spaced and styled */
+.focus-controls button {
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  border-radius: 6px;
+  background: var(--tab-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.focus-controls button:hover {
+  background: var(--hover-bg);
+}
+
+.focus-controls button svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* PWA specific adjustments */
+@media all and (display-mode: standalone) {
+  .focus-controls {
+    top: max(env(safe-area-inset-top, 20px), 40px);
+  }
 }
 
 /* Copy button styles - normal mode */

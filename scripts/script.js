@@ -1077,14 +1077,14 @@ function copyToClipboard() {
 }
 
 // Initialize focus mode on load
-document.addEventListener('DOMContentLoaded', initFocusMode);
-
-// Add this at the document level in script.js:
-document.addEventListener('keydown', (e) => {
-  if (e.key === "Escape") {
-    const contentContainer = document.querySelector(".content-container");
-    if (contentContainer.classList.contains("preview-mode")) {
-      togglePreview();
+document.addEventListener('DOMContentLoaded', () => {
+  initFocusMode();
+  
+  // Enable focus mode by default for PWA
+  if (isPWA()) {
+    const focusMode = localStorage.getItem('focusMode');
+    if (focusMode === null) {
+      toggleFocusMode();
     }
   }
 });
@@ -1096,7 +1096,7 @@ function isPWA() {
          document.referrer.includes('android-app://');
 }
 
-// Initialize focus mode on load
+// Initialize focus mode and other features on load
 document.addEventListener('DOMContentLoaded', () => {
   initFocusMode();
   
@@ -1105,6 +1105,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const focusMode = localStorage.getItem('focusMode');
     if (focusMode === null) {
       toggleFocusMode();
+    }
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === "Escape") {
+    const contentContainer = document.querySelector(".content-container");
+    if (contentContainer.classList.contains("preview-mode")) {
+      togglePreview();
     }
   }
 });
