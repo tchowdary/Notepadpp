@@ -263,6 +263,12 @@ function setTheme(theme) {
   currentTheme = theme;
   localStorage.setItem("theme", theme);
   
+  // Update status bar color for PWA
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute('content', theme === 'dark' ? '#000000' : '#ffffff');
+  }
+  
   // Update theme for all JSON editors
   for (let [tabId, jsonEditor] of jsonEditors) {
     if (jsonEditor) {

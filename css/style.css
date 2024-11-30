@@ -8,6 +8,7 @@
   --tab-bg: #2d2d2d;
   --tab-active-bg: #1e1e1e;
   --border-color: #555;
+  --title-bar-bg: #1e1e1e;
 }
 
 /* Light theme */
@@ -20,6 +21,7 @@
   --tab-bg: #ebebeb;
   --tab-active-bg: #ffffff;
   --border-color: #ccc;
+  --title-bar-bg: #ffffff;
 }
 
 * {
@@ -330,7 +332,7 @@ body {
   width: 100px;
 }
 
-* Table styles */ .table-container {
+/* Table styles */ .table-container {
   overflow-x: auto;
   margin: 1em 0;
 }
@@ -638,4 +640,26 @@ body {
   .tab {
     padding: 12px;
   }
+}
+
+/* Title bar styles - only shown in standalone PWA mode */
+@media all and (display-mode: standalone) {
+  .titlebar {
+    background-color: var(--title-bar-bg);
+    color: var(--text-color);
+    padding: 8px;
+    -webkit-app-region: drag;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border-color);
+  }
+}
+
+/* Hide title bar when not in standalone mode */
+.titlebar {
+  display: none;
 }
