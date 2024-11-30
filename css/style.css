@@ -603,30 +603,32 @@ body {
   .editor-container {
     height: 70vh;
   }
+}
 
-  .toolbar {
-    padding: 5px;
-    flex-wrap: wrap;
-    gap: 5px;
+/* PWA specific styles */
+@media all and (display-mode: standalone) {
+  .focus-mode .copy-button,
+  .focus-mode-exit {
+    position: fixed;
+    top: env(safe-area-inset-top, 20px);
+    bottom: auto !important;
+    z-index: 1000;
+  }
+  
+  .focus-mode .copy-button {
+    right: calc(env(safe-area-inset-right, 20px) + 54px);
+  }
+  
+  .focus-mode-exit {
+    right: env(safe-area-inset-right, 20px);
   }
 
-  .toolbar button {
-    padding: 8px;
-  }
-
-  .toolbar button svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .editor {
-    font-size: 14px;
-    padding: 10px;
-  }
-
-  .line-numbers {
-    padding: 10px 5px;
-    font-size: 14px;
+  /* Ensure content doesn't go under safe areas */
+  .main-container {
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
   }
 }
 
