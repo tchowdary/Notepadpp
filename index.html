@@ -7,7 +7,10 @@
       type="image/png"
       href="./icons/favicon.png"
     />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta 
+      name="viewport" 
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, minimal-ui" 
+    />
     <title>Notepad</title>
     
     <!-- PWA Meta Tags -->
@@ -44,22 +47,10 @@
 
   <body>
     <div class="toolbar">
-      <!-- <button onclick="newFile()" title="New File">
-        <svg viewBox="0 0 24 24">
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-        </svg>
-      </button> -->
-      <!-- <button onclick="saveCurrentFile()" title="Save">
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4zm2 16H5V5h11.17L19 7.83V19zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
-          />
-        </svg>
-      </button> -->
       <button onclick="downloadCurrentFile()" title="Download">
         <svg viewBox="0 0 24 24">
           <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-        </svg>
+        </svg>  
       </button>
       <button
         onclick="document.getElementById('fileInput').click()"
@@ -72,14 +63,13 @@
         </svg>
       </button>
 
-      <button class="focus-mode-enter" title="Enter Focus Mode (Ctrl + M)">
+      <!-- <button onclick="toggleFocusMode()" title="Toggle Focus Mode (Ctrl + M)">
         <svg viewBox="0 0 24 24">
           <path
             d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
           />
         </svg>
-      </button>
-      <input type="file" id="fileInput" onchange="openFile(event)" />
+      </button> -->
       <button onclick="toggleTheme()" title="Toggle Theme">
         <svg viewBox="0 0 24 24">
           <path
@@ -94,18 +84,7 @@
           />
         </svg>
       </button>
-      <button onclick="setAPIKey()" id="apiKeyButton" title="Set API Key">
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M22 19h-6v-4h-2.68c-1.14 2.42-3.6 4-6.32 4-3.86 0-7-3.14-7-7s3.14-7 7-7c2.72 0 5.17 1.58 6.32 4H24v6h-2v4zm-4-2h2v-4h2v-2H11.94l-.23-.67C11.01 8.34 9.11 7 7 7c-2.76 0-5 2.24-5 5s2.24 5 5 5c2.11 0 4.01-1.34 4.71-3.33l.23-.67H18v4zM7 15c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm0-4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"
-          />
-        </svg>
-      </button>
-      <button
-        onclick="improveSelectedText()"
-        title="Improve Text"
-        class="improve-text"
-      >
+      <button onclick="improveSelectedText()" title="Improve Text" class="improve-text">
         <svg viewBox="0 0 24 24">
           <path
             d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
@@ -133,16 +112,16 @@
           />
         </svg>
       </button>
-
-      <!-- Add this button for exiting focus mode -->
-      <button class="focus-mode-exit" title="Exit Focus Mode (Esc)">
+      <button
+        onclick="setAPIKey()" id="apiKeyButton" title="Set API Key"
+      >
         <svg viewBox="0 0 24 24">
           <path
-            d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"
+            d="M22 19h-6v-4h-2.68c-1.14 2.42-3.6 4-6.32 4-3.86 0-7-3.14-7-7s3.14-7 7-7c2.72 0 5.17 1.58 6.32 4H24v6h-2v4zm-4-2h2v-4h2v-2H11.94l-.23-.67C11.01 8.34 9.11 7 7 7c-2.76 0-5 2.24-5 5s2.24 5 5 5c2.11 0 4.01-1.34 4.71-3.33l.23-.67H18v4zM7 15c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm0-4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"
           />
         </svg>
-        <span>Exit Focus Mode</span>
       </button>
+      <input type="file" id="fileInput" onchange="openFile(event)" />
     </div>
     <div class="main-container">
       <div class="content-container">
@@ -166,6 +145,20 @@
           <path
             d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
           />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Focus mode controls -->
+    <div class="focus-controls">
+      <button onclick="copyToClipboard()" title="Copy">
+        <svg viewBox="0 0 24 24">
+          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+        </svg>
+      </button>
+      <button onclick="toggleFocusMode()" title="Exit Focus Mode">
+        <svg viewBox="0 0 24 24">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
         </svg>
       </button>
     </div>

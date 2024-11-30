@@ -9,6 +9,7 @@
   --tab-active-bg: #1e1e1e;
   --border-color: #555;
   --title-bar-bg: #1e1e1e;
+  --hover-bg: #444;
 }
 
 /* Light theme */
@@ -22,6 +23,7 @@
   --tab-active-bg: #ffffff;
   --border-color: #ccc;
   --title-bar-bg: #ffffff;
+  --hover-bg: #ddd;
 }
 
 * {
@@ -31,13 +33,14 @@
 }
 
 body {
-  font-family: "JetBrains Mono", monospace;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  height: 100vh; /* fallback */
-  height: calc(var(--vh, 1vh) * 100);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
 
 /* Modified layout styles */
@@ -45,6 +48,7 @@ body {
   display: flex;
   flex: 1;
   overflow: hidden;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
 
 .tabs-container {
@@ -91,13 +95,16 @@ body {
 }
 
 .toolbar {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 100;
   background-color: var(--toolbar-bg);
-  padding: 8px;
+  padding: 10px;
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--border-color);
   justify-content: center;
-  align-items: center;
 }
 
 .toolbar button {
@@ -662,4 +669,51 @@ body {
 /* Hide title bar when not in standalone mode */
 .titlebar {
   display: none;
+}
+
+/* Focus mode styles */
+.focus-controls {
+  position: fixed;
+  top: env(safe-area-inset-top, 20px);
+  right: env(safe-area-inset-right, 20px);
+  display: none;
+  gap: 10px;
+  padding: 10px;
+  background: var(--toolbar-bg);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.focus-controls button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.focus-controls button:hover {
+  background-color: var(--hover-bg);
+}
+
+.focus-controls button svg {
+  width: 24px;
+  height: 24px;
+  fill: var(--text-color);
+}
+
+body.focus-mode .focus-controls {
+  display: flex;
+}
+
+body.focus-mode .toolbar,
+body.focus-mode .tabs-container,
+body.focus-mode .status-bar {
+  display: none;
+}
+
+body.focus-mode .editor-container {
+  padding: env(safe-area-inset-top, 20px) env(safe-area-inset-right, 20px) env(safe-area-inset-bottom, 20px) env(safe-area-inset-left, 20px);
 }

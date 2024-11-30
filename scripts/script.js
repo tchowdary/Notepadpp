@@ -1019,61 +1019,57 @@ document.addEventListener('DOMContentLoaded', () => {
 // focusModeBtn.innerHTML = 'Exit Focus Mode (Ctrl + M)';
 // document.body.appendChild(focusModeBtn);
 
-// Update the toggleFocusMode function
 function toggleFocusMode() {
-  const wasFocusMode = document.body.classList.contains('focus-mode');
-  document.body.classList.toggle('focus-mode');
-
-  // Show/hide focus mode UI elements
-  const exitButtons = document.querySelectorAll('.focus-mode-exit');
-  exitButtons.forEach(button => {
-    button.style.display = wasFocusMode ? 'none' : 'flex';
-  });
-
-  // Ensure editor is visible and focused
-  const currentTab = getCurrentTab();
-  if (currentTab) {
-    currentTab.editor.style.display = 'block';
-    if (!wasFocusMode) {
-      // When entering focus mode, focus the editor
-      setTimeout(() => {
-        currentTab.editor.focus();
-      }, 100);
-    }
+  const body = document.body;
+  const wasInFocusMode = body.classList.contains('focus-mode');
+  
+  body.classList.toggle('focus-mode');
+  
+  // Update theme color meta tag based on focus mode state
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor) {
+    themeColor.content = body.classList.contains('focus-mode') ? '#000000' : getComputedStyle(document.body).getPropertyValue('--title-bar-bg').trim();
   }
 
-  updateLocalStorage();
+  // Notify the user of mode change
+  showNotification(wasInFocusMode ? 'Exited focus mode' : 'Entered focus mode', 2000);
+  
+  // Save the focus mode state
+  localStorage.setItem('focusMode', body.classList.contains('focus-mode'));
 }
 
-// Update focus mode state in localStorage
-function updateLocalStorage() {
-  localStorage.setItem('focusMode', document.body.classList.contains('focus-mode'));
-}
+// Add keyboard shortcut for focus mode (Ctrl + M)
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key.toLowerCase() === 'm') {
+    e.preventDefault();
+    toggleFocusMode();
+  }
+  
+  // Allow Escape key to exit focus mode
+  if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) {
+    toggleFocusMode();
+  }
+});
 
-// Initialize focus mode from localStorage
-function initFocusMode() {
+// Restore focus mode state on page load
+document.addEventListener('DOMContentLoaded', function() {
   const focusMode = localStorage.getItem('focusMode') === 'true';
   if (focusMode) {
     document.body.classList.add('focus-mode');
   }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Add click handlers for focus mode buttons
-  const focusModeEnter = document.querySelector('.focus-mode-enter');
-  const focusModeExit = document.querySelector('.focus-mode-exit');
-
-  if (focusModeEnter) {
-    focusModeEnter.addEventListener('click', toggleFocusMode);
-  }
-
-  if (focusModeExit) {
-    focusModeExit.addEventListener('click', toggleFocusMode);
-  }
-
-  // Initialize focus mode state
-  initFocusMode();
 });
+
+function copyToClipboard() {
+  const editor = document.querySelector('.CodeMirror').CodeMirror;
+  const content = editor.getValue();
+  
+  navigator.clipboard.writeText(content).then(() => {
+    showNotification('Content copied to clipboard', 2000);
+  }).catch(err => {
+    console.error('Failed to copy text: ', err);
+    showNotification('Failed to copy content', 2000);
+  });
+}
 
 // Initialize focus mode on load
 document.addEventListener('DOMContentLoaded', initFocusMode);
