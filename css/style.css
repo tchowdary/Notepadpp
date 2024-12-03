@@ -111,14 +111,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 6px;
   background-color: var(--tab-bg);
   color: var(--text-color);
   border: 1px solid var(--border-color);
   cursor: pointer;
-  border-radius: 6px;
-  width: 40px;
-  height: 40px;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
   transition: all 0.2s ease;
 }
 
@@ -128,8 +128,8 @@ body {
 }
 
 .toolbar button svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   fill: currentColor;
 }
 
