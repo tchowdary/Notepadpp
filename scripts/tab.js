@@ -8,7 +8,7 @@ class Tab {
     this.createElements();
     this.setupTabNameEditing(); 
     this.setupSelectionPopup();
-    this.addCopyButton();
+    //this.addCopyButton();
     this.addFocusModeButtons();
 
     // Add keyboard shortcut handling to the editor
@@ -200,58 +200,6 @@ class Tab {
     }
 
     this.editorWrapper.appendChild(exitButton);
-  }
-
-  addCopyButton() {
-    const copyButton = document.createElement('button');
-    copyButton.className = 'copy-button';
-    copyButton.title = 'Copy to clipboard';
-    copyButton.innerHTML = `
-        <svg viewBox="0 0 24 24">
-                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                    </svg>
-    `;
-
-    copyButton.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(this.editor.value);
-
-        // Add visual feedback
-        copyButton.classList.add('copy-feedback');
-        setTimeout(() => {
-          copyButton.classList.remove('copy-feedback');
-        }, 300);
-
-      } catch (err) {
-        showError('Failed to copy to clipboard');
-      }
-    });
-
-    this.editorWrapper.appendChild(copyButton);
-  }
-
-  insertHorizontalLine() {
-    const pos = this.editor.selectionStart;
-    const value = this.editor.value;
-    const horizontalLine =
-      "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-
-    this.editor.value =
-      value.slice(0, pos) + horizontalLine + value.slice(pos);
-    this.editor.selectionStart = this.editor.selectionEnd =
-      pos + horizontalLine.length;
-    this.updateLineNumbers();
-    this.saveToLocalStorage();
-  }
-
-  async saveToIndexedDB() {
-    const transaction = db.transaction(["tabs"], "readwrite");
-    const store = transaction.objectStore("tabs");
-    await store.put({
-      id: this.id,
-      name: this.name,
-      content: this.editor.value,
-    });
   }
 
   setupTabNameEditing() {
