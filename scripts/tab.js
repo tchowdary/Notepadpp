@@ -430,18 +430,29 @@ class Tab {
   updateLineNumbers() {
     const lines = this.editor.value.split("\n");
     const lineCount = lines.length;
-    const lineNumbersContent = Array.from(
-      { length: lineCount },
-      (_, i) => {
+    const currentLineCount = this.lineNumbers.children.length;
+
+    // Only update if line count changed
+    if (lineCount !== currentLineCount) {
+      // Clear existing line numbers
+      this.lineNumbers.innerHTML = "";
+      
+      // Create a document fragment for better performance
+      const fragment = document.createDocumentFragment();
+      
+      // Create line number elements
+      for (let i = 0; i < lineCount; i++) {
         const div = document.createElement("div");
         div.textContent = i + 1;
-        return div;
+        fragment.appendChild(div);
       }
-    );
-    this.lineNumbers.innerHTML = "";
-    lineNumbersContent.forEach((div) =>
-      this.lineNumbers.appendChild(div)
-    );
+      
+      // Append all line numbers at once
+      this.lineNumbers.appendChild(fragment);
+    }
+
+    // Ensure scroll synchronization
+    this.lineNumbers.scrollTop = this.editor.scrollTop;
   }
 
   updateStatusBar() {
