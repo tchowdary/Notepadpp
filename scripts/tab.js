@@ -199,7 +199,7 @@ class Tab {
         document.querySelector('.toolbar').appendChild(enterButton);
     }
 
-    this.editorWrapper.appendChild(exitButton);
+    //this.editorWrapper.appendChild(exitButton);
   }
 
   setupTabNameEditing() {
