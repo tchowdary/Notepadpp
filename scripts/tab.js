@@ -125,40 +125,66 @@ class Tab {
       }
       
       // Handle Tab key for list indentation
-      if (e.key === "Tab" && !e.shiftKey) {
+      if (e.key === "Tab") {
         const cursorPos = this.editor.selectionStart;
         const content = this.editor.value;
         const currentLineStart = content.lastIndexOf('\n', cursorPos - 1) + 1;
         const currentLine = content.substring(currentLineStart, cursorPos);
         
         // Check if we're on a list item
-        const listMatch = currentLine.match(/^(\s*)(?:[-*+]|\d+(?:[a-z]?)[\.\)])\s+/);
+        const listMatch = currentLine.match(/^(\s*)(?:[-*+]|\d+(?:[a-z]?)[\.\)])\s+(.*)$/);
         if (listMatch) {
           e.preventDefault();
-          const [fullMatch, spaces] = listMatch;
+          const [fullMatch, spaces, text] = listMatch;
           
-          // If it's a numbered list without sub-letter, convert to sub-numbering
-          const numberedMatch = currentLine.match(/^(\s*)(\d+)[\.\)]\s+(.*)$/);
-          if (numberedMatch) {
-            const [, , number, text] = numberedMatch;
-            // Replace current line's indentation with 2 spaces
-            const newLine = '  ' + number + 'a. ' + text;
-            this.editor.value = content.substring(0, currentLineStart) + newLine + content.substring(currentLineStart + currentLine.length);
-            this.editor.selectionStart = this.editor.selectionEnd = currentLineStart + newLine.length;
+          if (e.shiftKey) {
+            // Handle unindent (shift+tab)
+            if (spaces.length >= 2) {
+              // Check if it's a numbered sub-list item (e.g., "3a.")
+              const numberedSubMatch = currentLine.match(/^(\s*)(\d+)([a-z])[\.\)]\s+(.*)$/);
+              if (numberedSubMatch) {
+                const [, , number, subLetter, text] = numberedSubMatch;
+                // Convert back to regular numbered item by removing sub-letter
+                const newIndent = spaces.slice(2);
+                const newLine = newIndent + number + '. ' + text;
+                this.editor.value = content.substring(0, currentLineStart) + newLine + content.substring(currentLineStart + currentLine.length);
+                this.editor.selectionStart = this.editor.selectionEnd = currentLineStart + newLine.length;
+              } else {
+                // For bullet points and regular numbered items, just remove indentation
+                const newIndent = spaces.slice(2);
+                const newLine = newIndent + currentLine.trim();
+                this.editor.value = content.substring(0, currentLineStart) + newLine + content.substring(currentLineStart + currentLine.length);
+                this.editor.selectionStart = this.editor.selectionEnd = currentLineStart + newLine.length;
+              }
+              this.updateLineNumbers();
+              this.saveToLocalStorage();
+            }
+            return;
           } else {
-            // For bullet points and other cases, replace current indentation with 2 more spaces
-            const bulletMatch = currentLine.match(/^(\s*)([-*+])\s+(.*)$/);
-            if (bulletMatch) {
-              const [, , marker, text] = bulletMatch;
-              const newIndent = '  ';
-              const newLine = newIndent + marker + ' ' + text;
+            // Handle indent (tab)
+            // If it's a numbered list without sub-letter, convert to sub-numbering
+            const numberedMatch = currentLine.match(/^(\s*)(\d+)[\.\)]\s+(.*)$/);
+            if (numberedMatch) {
+              const [, , number, text] = numberedMatch;
+              // Replace current line's indentation with 2 spaces
+              const newLine = '  ' + number + 'a. ' + text;
               this.editor.value = content.substring(0, currentLineStart) + newLine + content.substring(currentLineStart + currentLine.length);
               this.editor.selectionStart = this.editor.selectionEnd = currentLineStart + newLine.length;
+            } else {
+              // For bullet points and other cases, add 2 spaces to indentation
+              const bulletMatch = currentLine.match(/^(\s*)([-*+])\s+(.*)$/);
+              if (bulletMatch) {
+                const [, , marker, text] = bulletMatch;
+                const newIndent = spaces + '  ';
+                const newLine = newIndent + marker + ' ' + text;
+                this.editor.value = content.substring(0, currentLineStart) + newLine + content.substring(currentLineStart + currentLine.length);
+                this.editor.selectionStart = this.editor.selectionEnd = currentLineStart + newLine.length;
+              }
             }
+            this.updateLineNumbers();
+            this.saveToLocalStorage();
+            return;
           }
-          this.updateLineNumbers();
-          this.saveToLocalStorage();
-          return;
         }
       }
     });
