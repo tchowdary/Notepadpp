@@ -1,10 +1,10 @@
 const CACHE_NAME = 'notepad-v1';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/scripts/script.js',
-  '/manifest.json',
+  './',
+  './index.html',
+  './css/style.css',
+  './scripts/script.js',
+  './manifest.json',
   'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap',
   'https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap'
 ];
