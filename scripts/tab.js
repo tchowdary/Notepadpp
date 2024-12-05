@@ -396,8 +396,9 @@ class Tab {
     // Create editor
     this.editor = document.createElement("textarea");
     this.editor.className = "editor";
-    this.editor.value = this.content;
+    this.editor.value = this.content || ""; // Ensure content is never undefined
     this.editor.spellcheck = false;
+    this.editor.readOnly = false; // Explicitly set readOnly to false
     
     // Apply word wrap setting
     if (this.wordWrap) {
@@ -423,6 +424,8 @@ class Tab {
     document
       .getElementById("editorContainer")
       .appendChild(this.editorWrapper);
+
+    this.editor.focus(); // Focus the editor during initialization
 
     this.updateLineNumbers();
   }
@@ -537,6 +540,15 @@ class Tab {
     this.editorWrapper.classList.add("active");
     document.getElementById("statusFileName").textContent = this.name;
     this.updateStatusBar();
+    // Ensure editor is properly focused and editable
+    this.editor.readOnly = false;
+    this.editor.focus();
+    
+    // Force a re-focus after a short delay to handle edge cases
+    setTimeout(() => {
+      this.editor.blur();  // First blur to ensure state is reset
+      this.editor.focus(); // Then focus again
+    }, 10);
   }
 
   deactivate() {

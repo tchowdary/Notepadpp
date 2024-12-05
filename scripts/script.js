@@ -126,6 +126,15 @@ function createTab(
   const tab = new Tab(id, name, content);
   tabs.push({ id, tab, button: tabButton });
 
+  // If this is the only tab, activate it immediately
+  if (tabs.length === 1) {
+    setActiveTab(id);
+    // Force focus on the editor after a short delay to ensure DOM is ready
+    setTimeout(() => {
+      tab.editor.focus();
+    }, 0);
+  }
+
   return id;
 }
 
