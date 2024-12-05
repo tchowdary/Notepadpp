@@ -430,29 +430,18 @@ class Tab {
   updateLineNumbers() {
     const lines = this.editor.value.split("\n");
     const lineCount = lines.length;
-    const currentLineCount = this.lineNumbers.children.length;
-
-    // Only update if line count changed
-    if (lineCount !== currentLineCount) {
-      // Clear existing line numbers
-      this.lineNumbers.innerHTML = "";
-      
-      // Create a document fragment for better performance
-      const fragment = document.createDocumentFragment();
-      
-      // Create line number elements
-      for (let i = 0; i < lineCount; i++) {
+    const lineNumbersContent = Array.from(
+      { length: lineCount },
+      (_, i) => {
         const div = document.createElement("div");
         div.textContent = i + 1;
-        fragment.appendChild(div);
+        return div;
       }
-      
-      // Append all line numbers at once
-      this.lineNumbers.appendChild(fragment);
-    }
-
-    // Ensure scroll synchronization
-    this.lineNumbers.scrollTop = this.editor.scrollTop;
+    );
+    this.lineNumbers.innerHTML = "";
+    lineNumbersContent.forEach((div) =>
+      this.lineNumbers.appendChild(div)
+    );
   }
 
   updateStatusBar() {
@@ -558,7 +547,17 @@ class Tab {
     this.saveToIndexedDB().catch(console.error);
   }
 
-  // Add new method for bullet list conversion
+  async saveToIndexedDB() {
+    const transaction = db.transaction(["tabs"], "readwrite");
+    const store = transaction.objectStore("tabs");
+    const tabData = {
+      id: this.id,
+      name: this.name,
+      content: this.editor.value
+    };
+    await store.put(tabData);
+  }
+
   convertToBulletList() {
     const start = this.editor.selectionStart;
     const end = this.editor.selectionEnd;
@@ -601,7 +600,6 @@ class Tab {
     this.editor.selectionEnd = lineStart + bulletLines.join('\n').length;
   }
 
-  // Add new method for moving lines up/down
   moveLine(direction) {
     const text = this.editor.value;
     let start = this.editor.selectionStart;

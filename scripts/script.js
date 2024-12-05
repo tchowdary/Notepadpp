@@ -277,7 +277,15 @@ function setTheme(theme) {
   // Update theme for all JSON editors
   for (let [tabId, jsonEditor] of jsonEditors) {
     if (jsonEditor) {
-      jsonEditor.setTheme(theme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/chrome');
+      try {
+        // Get the ace editor instance from the JSON editor
+        const aceEditor = jsonEditor.aceEditor;
+        if (aceEditor) {
+          aceEditor.setTheme(theme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/chrome');
+        }
+      } catch (error) {
+        console.error('Error updating JSON editor theme:', error);
+      }
     }
   }
 }
@@ -322,8 +330,8 @@ function formatJSON() {
       try {
         // Create the editor with improved options
         const options = {
-          mode: 'tree',
-          modes: ['tree', 'code', 'preview'],
+          mode: 'code',
+          modes: ['code', 'tree', 'preview'],
           onChangeText: (jsonString) => {
             tab.editor.value = jsonString;
             tab.saveToLocalStorage();
@@ -349,7 +357,6 @@ function formatJSON() {
 
     // Set the JSON content
     jsonEditor.set(parsed);
-    jsonEditor.expandAll();
     
     // Show JSON editor container and hide original editor
     container.style.display = 'block';
@@ -1024,6 +1031,15 @@ document.addEventListener('DOMContentLoaded', () => {
 // focusModeBtn.innerHTML = 'Exit Focus Mode (Ctrl + M)';
 // document.body.appendChild(focusModeBtn);
 
+// Initialize focus mode settings
+function initFocusMode() {
+  const focusMode = localStorage.getItem('focusMode');
+  if (focusMode === 'true') {
+    document.body.classList.add('focus-mode');
+  }
+}
+
+// Toggle focus mode on/off
 function toggleFocusMode() {
   const body = document.body;
   const wasInFocusMode = body.classList.contains('focus-mode');
@@ -1117,3 +1133,17 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+function showNotification(message, duration = 3000) {
+  const notification = document.querySelector('.notification');
+  notification.textContent = message;
+  notification.style.display = 'block';
+
+  setTimeout(() => {
+    notification.style.display = 'none';
+  }, duration);
+}
+
+function showError(message) {
+  showNotification(message);
+}

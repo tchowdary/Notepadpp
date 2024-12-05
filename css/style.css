@@ -719,3 +719,18 @@ body.focus-mode .status-bar {
 body.focus-mode .editor-container {
   padding: env(safe-area-inset-top, 20px) env(safe-area-inset-right, 20px) env(safe-area-inset-bottom, 20px) env(safe-area-inset-left, 20px);
 }
+
+/* Add styles for the notification element */
+.notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background-color: var(--toolbar-bg);
+  color: var(--text-color);
+  border-radius: 4px;
+  z-index: 1000;
+  display: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
