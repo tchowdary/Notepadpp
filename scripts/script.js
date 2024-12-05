@@ -634,6 +634,12 @@ document.addEventListener("keydown", (e) => {
     } else if (e.ctrlKey && e.shiftKey && e.key === "T") {
       e.preventDefault();
       toggleJsonEditor();
+    } else if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === "u") {
+      e.preventDefault();
+      convertToLowerCase();
+    } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "u") {
+      e.preventDefault();
+      convertToUpperCase();
     }
   }
   
@@ -1155,4 +1161,48 @@ function showNotification(message, duration = 3000) {
 
 function showError(message) {
   showNotification(message);
+}
+
+function convertToLowerCase() {
+  const editor = document.querySelector(".editor");
+  if (editor) {
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    
+    if (start !== end) {
+      const selectedText = editor.value.substring(start, end);
+      const lowerCaseText = selectedText.toLowerCase();
+      editor.setRangeText(lowerCaseText, start, end, 'select');
+      
+      // Save changes using the Tab's save method
+      const currentTab = getCurrentTab();
+      if (currentTab) {
+        currentTab.saveToLocalStorage();
+      }
+      
+      showNotification('Text converted to lowercase');
+    }
+  }
+}
+
+function convertToUpperCase() {
+  const editor = document.querySelector(".editor");
+  if (editor) {
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    
+    if (start !== end) {
+      const selectedText = editor.value.substring(start, end);
+      const upperCaseText = selectedText.toUpperCase();
+      editor.setRangeText(upperCaseText, start, end, 'select');
+      
+      // Save changes using the Tab's save method
+      const currentTab = getCurrentTab();
+      if (currentTab) {
+        currentTab.saveToLocalStorage();
+      }
+      
+      showNotification('Text converted to uppercase');
+    }
+  }
 }
