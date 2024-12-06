@@ -466,6 +466,29 @@ const converters = {
       }
     }
   },
+  jwt: {
+    name: 'JWT Parser',
+    convert: function(input) {
+      try {
+        const jwt = input.trim();
+        if (!jwt) {
+          throw new Error('Empty JWT token');
+        }
+
+        const [headerB64, payloadB64] = jwt.split('.');
+        if (!headerB64 || !payloadB64) {
+          throw new Error('Invalid JWT format');
+        }
+        
+        const header = JSON.parse(atob(headerB64));
+        const payload = JSON.parse(atob(payloadB64));
+
+        return `\n\n---\nJWT Header:\n${JSON.stringify(header, null, 2)}\n\nJWT Payload:\n${JSON.stringify(payload, null, 2)}`;
+      } catch (e) {
+        throw new Error('Invalid JWT format: ' + e.message);
+      }
+    }
+  },
   timestamp: {
     name: 'Timestamp to Date',
     convert: function(input) {
@@ -542,6 +565,10 @@ function applyConverter(converterKey) {
   } catch (error) {
     showError(error.message);
   }
+}
+
+function parseJWT() {
+  applyConverter('jwt');
 }
 
 // Update existing converter functions to use the new system
@@ -797,53 +824,6 @@ async function improveSelectedText() {
   }
 }
 
-function convertTimestamp() {
-  const tab = getCurrentTab();
-  if (!tab) return;
-
-  // Get selected text
-  const start = tab.editor.selectionStart;
-  const end = tab.editor.selectionEnd;
-  const selectedText = tab.editor.value.substring(start, end).trim();
-
-  if (!selectedText) {
-    showError("Please select a timestamp to convert");
-    return;
-  }
-
-  try {
-    const timestamp = parseInt(selectedText);
-    if (isNaN(timestamp)) throw new Error("Invalid timestamp");
-
-    // Detect format (milliseconds or seconds) based on length
-    const format =
-      timestamp.toString().length === 13 ? "milliseconds" : "seconds";
-    const ms = format === "seconds" ? timestamp * 1000 : timestamp;
-    const date = new Date(ms);
-
-    if (date.toString() === "Invalid Date")
-      throw new Error("Invalid timestamp");
-
-    // Create formatted result
-    const result = `\n\n---\nFormat: ${format}\nUTC: ${date.toUTCString()}\nLocal: ${date.toString()}\n---\n\n`;
-
-    // Insert result after the selected timestamp
-    const before = tab.editor.value.substring(0, end);
-    const after = tab.editor.value.substring(end);
-    tab.editor.value = before + result + after;
-
-    // Update editor state
-    tab.updateLineNumbers();
-    tab.saveToLocalStorage();
-  } catch (error) {
-    showError("Invalid timestamp format");
-    const convertButton = document.querySelector(".convert-timestamp");
-    convertButton.classList.add("error");
-    setTimeout(() => {
-      convertButton.classList.remove("error");
-    }, 2000);
-  }
-}
 
 // Update keyboard shortcuts for mobile
 document.addEventListener("keydown", (e) => {

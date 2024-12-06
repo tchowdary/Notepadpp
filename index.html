@@ -113,7 +113,7 @@
       <button onclick="togglePreview()" title="Toggle Preview">
         <svg viewBox="0 0 24 24">
           <path
-            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"
           />
         </svg>
       </button>
@@ -137,6 +137,7 @@
           <button onclick="convertHexToBase64()" title="Hex to Base64">Hex → Base64</button>
           <button onclick="convertBase64ToHex()" title="Base64 to Hex">Base64 → Hex</button>
           <button onclick="convertJsonToCsv()" title="JSON to CSV">JSON → CSV</button>
+          <button onclick="parseJWT()" title="Parse JWT">JWT → Decoded</button>
         </div>
       </div>
       <input type="file" id="fileInput" onchange="openFile(event)" />
