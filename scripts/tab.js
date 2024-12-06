@@ -538,7 +538,11 @@ class Tab {
 
   activate() {
     this.editorWrapper.classList.add("active");
-    document.getElementById("statusFileName").textContent = this.name;
+    const statusFileName = document.getElementById("statusFileName");
+    statusFileName.textContent = this.name;
+    statusFileName.style.cursor = "pointer";
+    statusFileName.title = "Click to rename file";
+    this.setupStatusBarNameEditing();
     this.updateStatusBar();
     // Ensure editor is properly focused and editable
     this.editor.readOnly = false;
@@ -553,6 +557,13 @@ class Tab {
 
   deactivate() {
     this.editorWrapper.classList.remove("active");
+    // Remove click handler from status bar filename
+    const statusFileName = document.getElementById("statusFileName");
+    if (statusFileName) {
+      // Remove all event listeners by cloning and replacing
+      const newStatusFileName = statusFileName.cloneNode(true);
+      statusFileName.parentNode.replaceChild(newStatusFileName, statusFileName);
+    }
   }
 
   saveToLocalStorage() {
@@ -660,5 +671,65 @@ class Tab {
 
     this.updateLineNumbers();
     this.saveToLocalStorage();
+  }
+
+  setupStatusBarNameEditing() {
+    const statusFileName = document.getElementById("statusFileName");
+    
+    // First remove any existing click handlers by cloning and replacing
+    const newStatusFileName = statusFileName.cloneNode(true);
+    statusFileName.parentNode.replaceChild(newStatusFileName, statusFileName);
+    
+    const handleClick = (e) => {
+      e.stopPropagation();
+      const input = document.createElement("input");
+      input.value = this.name;
+      input.className = "tab-name-input";
+      newStatusFileName.replaceWith(input);
+      input.focus();
+      input.select();
+
+      const handleRename = () => {
+        let newName = input.value.trim() || "Untitled";
+        // Add .md extension if not present
+        if (!newName.endsWith('.md')) {
+          newName += '.md';
+        }
+        this.name = newName;
+        const newStatusFileName = document.createElement("span");
+        newStatusFileName.id = "statusFileName";
+        newStatusFileName.style.cursor = "pointer";
+        newStatusFileName.title = "Click to rename file";
+        newStatusFileName.textContent = newName;
+        input.replaceWith(newStatusFileName);
+        
+        // Update tab name as well
+        const tabNameSpan = document.querySelector(`.tab-name[data-tab-id="${this.id}"]`);
+        if (tabNameSpan) {
+          tabNameSpan.textContent = newName;
+        }
+        
+        this.saveToLocalStorage();
+        this.setupStatusBarNameEditing();
+      };
+
+      input.addEventListener("blur", handleRename);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          handleRename();
+        } else if (e.key === "Escape") {
+          // Cancel rename on Escape
+          const newStatusFileName = document.createElement("span");
+          newStatusFileName.id = "statusFileName";
+          newStatusFileName.style.cursor = "pointer";
+          newStatusFileName.title = "Click to rename file";
+          newStatusFileName.textContent = this.name;
+          input.replaceWith(newStatusFileName);
+          this.setupStatusBarNameEditing();
+        }
+      });
+    };
+
+    newStatusFileName.addEventListener("click", handleClick);
   }
 }

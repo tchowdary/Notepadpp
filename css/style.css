@@ -241,6 +241,31 @@ body {
   border-top: 1px solid var(--border-color);
 }
 
+#statusFileName {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+#statusFileName:hover {
+  color: #007acc;
+}
+
+.status-bar .tab-name-input {
+  font-size: 12px;
+  padding: 2px 4px;
+  margin: -2px 0;
+  width: 200px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  outline: none;
+}
+
+.status-bar .tab-name-input:focus {
+  border-color: #007acc;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 12px;
