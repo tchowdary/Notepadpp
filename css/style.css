@@ -734,3 +734,47 @@ body.focus-mode .editor-container {
   display: none;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
+
+/* Converter Dropdown */
+.converter-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.converter-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  min-width: 180px;
+  padding: 5px 0;
+  margin: 2px 0 0;
+  background-color: var(--toolbar-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.converter-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 15px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.converter-menu button:hover {
+  background-color: var(--hover-color);
+}
+
+.converter-btn {
+  position: relative;
+}
+
+.converter-btn.active {
+  background-color: var(--hover-color);
+}

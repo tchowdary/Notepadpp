@@ -299,6 +299,268 @@ function setTheme(theme) {
   }
 }
 
+// Converter System
+const converters = {
+  timestamp: {
+    name: 'Timestamp to Date',
+    convert: function(input) {
+      // Find all numbers that could be timestamps
+      const timestamps = input.match(/\d+/g);
+      if (!timestamps) {
+        throw new Error("No timestamps found in the text. Please enter a number like 1699893347 or 1699893347000");
+      }
+
+      let results = [];
+      let validCount = 0;
+      for (const ts of timestamps) {
+        try {
+          const timestamp = parseInt(ts);
+          if (isNaN(timestamp)) continue;
+
+          // Only process numbers that could reasonably be timestamps
+          // Ignore very small numbers or very large numbers
+          if (timestamp < 1000000000 || timestamp > 9999999999999) continue;
+
+          // Try both milliseconds and seconds
+          let dates = [];
+          // Try as milliseconds if number is large enough
+          if (ts.length >= 13) {
+            const msDate = new Date(timestamp);
+            if (msDate.getTime() > 0 && msDate.getFullYear() > 1970 && msDate.getFullYear() < 2100) {
+              dates.push({
+                format: "milliseconds",
+                date: msDate
+              });
+            }
+          }
+          // Try as seconds
+          const secsDate = new Date(timestamp * 1000);
+          if (secsDate.getTime() > 0 && secsDate.getFullYear() > 1970 && secsDate.getFullYear() < 2100) {
+            dates.push({
+              format: "seconds",
+              date: secsDate
+            });
+          }
+
+          if (dates.length > 0) {
+            validCount++;
+            results.push(`\nTimestamp: ${ts}`);
+            dates.forEach(({format, date}) => {
+              results.push(`Format: ${format}`);
+              results.push(`UTC: ${date.toUTCString()}`);
+              results.push(`Local: ${date.toString()}`);
+            });
+            results.push("---");
+          }
+        } catch (e) {
+          continue; // Skip invalid timestamps
+        }
+      }
+
+      if (validCount === 0) {
+        throw new Error("No valid timestamps found. Please enter a Unix timestamp (e.g., 1699893347 or 1699893347000)");
+      }
+
+      return `\n\n---\n${results.join('\n')}\n---\n\n`;
+    }
+  },
+  hexToBase64: {
+    name: 'Hex to Base64',
+    convert: function(hexString) {
+      try {
+        // Clean up hex string
+        const cleanHex = hexString.replace(/0x/g, '').replace(/\s/g, '');
+        if (!/^[0-9A-Fa-f]+$/.test(cleanHex)) {
+          throw new Error("Invalid hex string");
+        }
+        
+        const bytes = cleanHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16));
+        const byteArray = new Uint8Array(bytes);
+        const base64 = btoa(String.fromCharCode.apply(null, byteArray));
+        
+        return `\n\n---\nHex Input:\n${hexString}\n\nBase64 Output:\n${base64}\n---\n\n`;
+      } catch (error) {
+        throw new Error(`Hex to Base64 conversion failed: ${error.message}`);
+      }
+    }
+  },
+  base64ToHex: {
+    name: 'Base64 to Hex',
+    convert: function(encodedString) {
+      try {
+        const binaryString = atob(encodedString);
+        const hexArray = Array.from(binaryString).map(char => {
+          const hex = char.charCodeAt(0).toString(16).padStart(2, '0');
+          return '0x' + hex.toUpperCase();
+        });
+        
+        return `\n\n---\nBase64 Input:\n${encodedString}\n\nHex Output:\n${hexArray.join(' ')}\n---\n\n`;
+      } catch (error) {
+        throw new Error(`Base64 to Hex conversion failed: ${error.message}`);
+      }
+    }
+  },
+  jsonToCsv: {
+    name: 'JSON to CSV',
+    convert: function(input) {
+      try {
+        const json = JSON.parse(input);
+        
+        // Handle case where data is wrapped in an object
+        const data = Array.isArray(json) ? json : (json.people || Object.values(json)[0]);
+        
+        if (!Array.isArray(data)) {
+          throw new Error("Input must contain an array of objects");
+        }
+        if (data.length === 0) {
+          throw new Error("Input array is empty");
+        }
+
+        // Function to flatten nested objects
+        function flattenObject(obj, prefix = '') {
+          return Object.keys(obj).reduce((acc, key) => {
+            const value = obj[key];
+            const newKey = prefix ? `${prefix}.${key}` : key;
+            
+            if (value === null) {
+              acc[newKey] = 'null';
+            } else if (Array.isArray(value)) {
+              acc[newKey] = JSON.stringify(value);
+            } else if (typeof value === 'object') {
+              Object.assign(acc, flattenObject(value, newKey));
+            } else {
+              acc[newKey] = value;
+            }
+            
+            return acc;
+          }, {});
+        }
+
+        // Flatten all objects in the array
+        const flattenedData = data.map(item => flattenObject(item));
+
+        // Get all unique headers
+        const headers = [...new Set(
+          flattenedData.reduce((acc, item) => [...acc, ...Object.keys(item)], [])
+        )].sort();
+
+        // Create CSV rows
+        const csvRows = [headers.join(',')];
+        
+        for (const row of flattenedData) {
+          const values = headers.map(header => {
+            const val = row[header] ?? '';
+            // Handle values that need quotes
+            if (typeof val === 'string') {
+              // Escape quotes and wrap in quotes
+              return `"${val.replace(/"/g, '""')}"`;
+            }
+            return val;
+          });
+          csvRows.push(values.join(','));
+        }
+
+        return `\n\n---\nCSV Output:\n${csvRows.join('\n')}\n---\n\n`;
+      } catch (error) {
+        throw new Error(`JSON to CSV conversion failed: ${error.message}`);
+      }
+    }
+  },
+  timestamp: {
+    name: 'Timestamp to Date',
+    convert: function(input) {
+      const timestamp = parseInt(input);
+      if (isNaN(timestamp)) throw new Error("Invalid timestamp");
+
+      const format = timestamp.toString().length === 13 ? "milliseconds" : "seconds";
+      const ms = format === "seconds" ? timestamp * 1000 : timestamp;
+      const date = new Date(ms);
+
+      if (date.toString() === "Invalid Date") throw new Error("Invalid timestamp");
+
+      return `\n\n---\nFormat: ${format}\nUTC: ${date.toUTCString()}\nLocal: ${date.toString()}\n---\n\n`;
+    }
+  }
+};
+
+// Converter menu toggle
+function toggleConverterMenu() {
+  const menu = document.querySelector('.converter-menu');
+  const button = document.querySelector('.converter-btn');
+  const isVisible = menu.style.display === 'block';
+  
+  menu.style.display = isVisible ? 'none' : 'block';
+  button.classList.toggle('active', !isVisible);
+  
+  // Close menu when clicking outside
+  if (!isVisible) {
+    document.addEventListener('click', function closeMenu(e) {
+      if (!e.target.closest('.converter-dropdown')) {
+        menu.style.display = 'none';
+        button.classList.remove('active');
+        document.removeEventListener('click', closeMenu);
+      }
+    });
+  }
+}
+
+function applyConverter(converterKey) {
+  const tab = getCurrentTab();
+  if (!tab) return;
+
+  // Get selected text or entire content if no selection
+  const start = tab.editor.selectionStart;
+  const end = tab.editor.selectionEnd;
+  const selectedText = start !== end ? 
+    tab.editor.value.substring(start, end).trim() : 
+    tab.editor.value.trim();
+
+  if (!selectedText) {
+    showError("No content to convert");
+    return;
+  }
+
+  try {
+    const converter = converters[converterKey];
+    if (!converter) throw new Error("Converter not found");
+
+    const result = converter.convert(selectedText);
+
+    // Always append the result at the cursor position or end of selection
+    const insertPosition = end;
+    const before = tab.editor.value.substring(0, insertPosition);
+    const after = tab.editor.value.substring(insertPosition);
+    tab.editor.value = before + result + after;
+
+    // Move cursor to end of inserted text
+    const newPosition = insertPosition + result.length;
+    tab.editor.setSelectionRange(newPosition, newPosition);
+
+    // Update editor state
+    tab.updateLineNumbers();
+    tab.saveToLocalStorage();
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+// Update existing converter functions to use the new system
+function convertHexToBase64() {
+  applyConverter('hexToBase64');
+}
+
+function convertBase64ToHex() {
+  applyConverter('base64ToHex');
+}
+
+function convertTimestamp() {
+  applyConverter('timestamp');
+}
+
+function convertJsonToCsv() {
+  applyConverter('jsonToCsv');
+}
+
 // Add new function for JSON formatting
 function formatJSON() {
   const tab = getCurrentTab();
